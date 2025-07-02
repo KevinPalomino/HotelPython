@@ -2,6 +2,7 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash
 from app import db
 from app.models.models import Habitacion, Cliente, Persona, Reserva, DetalleReserva
+from datetime import datetime, date
 
 cliente_bp = Blueprint('cliente', __name__)
 
@@ -75,4 +76,4 @@ def reservar_habitacion(id):
         flash('¡Reserva realizada con éxito!', 'success')
         return redirect(url_for('cliente.ver_habitaciones'))
 
-    return render_template('cliente/reserva_form.html', habitacion=habitacion)
+    return render_template('cliente/reserva_form.html', habitacion=habitacion, hoy=date.today())
