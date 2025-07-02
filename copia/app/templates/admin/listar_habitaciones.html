@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Listado de Habitaciones</title>
+  </head>
+  <body>
+    <h1>Listado de Habitaciones</h1>
+    <a href="{{ url_for('admin.nueva_habitacion') }}">➕ Nueva Habitación</a>
+    <table border="1">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Capacidad</th>
+          <th>Precio</th>
+          <th>Estado</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for h in habitaciones %}
+        <tr>
+          <td>{{ h.idhabitaciones }}</td>
+          <td>{{ h.capacidad }}</td>
+          <td>${{ h.precio }}</td>
+          <td>{{ 'Disponible' if h.estado else 'Ocupada' }}</td>
+          <td>
+            <a
+              href="{{ url_for('admin.editar_habitacion', id=h.idhabitaciones) }}"
+              >✏️ Editar</a
+            >
+            |
+            <a
+              href="{{ url_for('admin.eliminar_habitacion', id=h.idhabitaciones) }}"
+              onclick="return confirm('¿Seguro que deseas eliminarla?')"
+              >❌ Eliminar</a
+            >
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </body>
+</html>

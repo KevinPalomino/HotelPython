@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Reservas</title>
+  </head>
+  <body>
+    <h1>Listado de Reservas</h1>
+    <a href="{{ url_for('admin.panel_admin') }}">← Volver al panel</a>
+
+    <table border="1" cellpadding="10" cellspacing="0">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Cliente</th>
+          <th>Correo</th>
+          <th>Habitación</th>
+          <th>Check-in</th>
+          <th>Check-out</th>
+          <th>Abono</th>
+          <th>Estado</th>
+          <th>Acción</th>
+          <!-- Nueva columna -->
+        </tr>
+      </thead>
+      <tbody>
+        {% for reserva in reservas %}
+        <tr>
+          <td>{{ reserva.idreservas }}</td>
+          <td>{{ reserva.cliente.persona.nombre }}</td>
+          <td>{{ reserva.cliente.persona.correo }}</td>
+          <td>
+            <ul>
+              {% for detalle in reserva.detalle %}
+              <li>Habitación #{{ detalle.habitacion.idhabitaciones }}</li>
+              {% endfor %}
+            </ul>
+          </td>
+          <td>{{ reserva.checkin }}</td>
+          <td>{{ reserva.checkout }}</td>
+          <td>${{ "{:,.0f}".format(reserva.abono) }}</td>
+          <td>
+            {% if reserva.estado %}
+            <span style="color: green">Activa</span>
+            {% else %}
+            <span style="color: red">Anulada</span>
+            {% endif %}
+          </td>
+          <td>
+            {% if reserva.estado %}
+            <a
+              href="{{ url_for('admin.anular_reserva', id=reserva.idreservas) }}"
+              onclick="return confirm('¿Seguro que deseas anular esta reserva?')"
+            >
+              ❌ Anular
+            </a>
+            {% else %}
+            <em>No disponible</em>
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </body>
+</html>

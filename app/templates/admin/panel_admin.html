@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Panel del Administrador</title>
+  </head>
+  <body>
+    <h1>Bienvenido al Panel del Administrador</h1>
+    <p>Hola {{ current_user.nombre }}</p>
+
+    <nav>
+      <ul>
+        <li>
+          <a href="{{ url_for('admin.nueva_habitacion') }}">
+            ➕ Registrar nueva habitación
+          </a>
+        </li>
+        <li>
+          <a href="{{ url_for('admin.listar_habitaciones') }}"
+            >🛏️ Ver habitaciones registradas</a
+          >
+        </li>
+
+        <li><a href="#">📦 Gestión de inventario (próximamente)</a></li>
+        <li><a href="#">🧑‍💼 Gestión de personal (próximamente)</a></li>
+        <li><a href="{{ url_for('admin.ver_reservas') }}"">📋 Ver todas las reservas</a></li>
+        <li>
+          <a href="{{ url_for('auth.logout') }}">🔒 Cerrar sesión</a>
+        </li>
+      </ul>
+    </nav>
+  </body>
+</html>
