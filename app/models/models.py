@@ -90,7 +90,7 @@ class Reserva(db.Model):
     checkin = db.Column(db.Date, nullable=False)
     checkout = db.Column(db.Date, nullable=False)
     abono = db.Column(db.BigInteger, nullable=False)
-    estado = db.Column(db.Boolean, nullable=True)
+    estado = db.Column(db.Integer)  # tinyint(1) mapeado como Integer
     clientes_idclientes = db.Column(db.Integer, db.ForeignKey(
         'clientes.idclientes'), nullable=False)
     cliente = db.relationship('Cliente', backref='reservas', lazy=True)

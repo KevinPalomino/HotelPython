@@ -18,11 +18,6 @@ def panel_admin():
     return render_template('admin/panel_admin.html')
 
 
-@admin_bp.route('/recepcion')
-@login_required
-def panel_recepcionista():
-    return render_template('admin/panel_recepcionista.html')
-
 
 @admin_bp.route('/admin/habitaciones/nueva', methods=['GET', 'POST'])
 @login_required

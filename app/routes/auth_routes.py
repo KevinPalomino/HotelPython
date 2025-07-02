@@ -20,17 +20,20 @@ def login():
             flash("Usuario no encontrado", "danger")
             return redirect(url_for('auth.login'))
 
-        if persona.rol.nombre not in ['Administrador', 'recepcionista']:
+        rol_nombre = persona.rol.nombre.lower()  # <-- convertir a minúscula
+
+        if rol_nombre not in ['administrador', 'recepcionista']:
             flash("No tienes permiso para iniciar sesión.", "danger")
             return redirect(url_for('auth.login'))
 
         if check_password_hash(persona.contrasena, contrasena):
             login_user(persona)
             flash(f"Bienvenido, {persona.nombre}", "success")
-            if persona.rol.nombre == 'Administrador':
+
+            if rol_nombre == 'administrador':
                 return redirect(url_for('admin.panel_admin'))
-            else:
-                return redirect(url_for('admin.panel_recepcionista'))
+            elif rol_nombre == 'recepcionista':
+                return redirect(url_for('recepcion.panel_recepcionista'))
         else:
             flash("Contraseña incorrecta", "danger")
 

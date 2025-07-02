@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Check-out</title>
+  </head>
+  <body>
+    <h1>📤 Check-Out del día</h1>
+    {% if reservas %}
+    <table border="1" cellpadding="10">
+      <thead>
+        <tr>
+          <th>Cliente</th>
+          <th>Habitación</th>
+          <th>Fecha Ingreso</th>
+          <th>Fecha Salida</th>
+          <th>Estado</th>
+          <th>Acción</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for r in reservas %}
+        <tr>
+          <td>{{ r.cliente.nombre }}</td>
+          <td>{{ r.habitacion.tipo }}</td>
+          <td>{{ r.fecha_ingreso }}</td>
+          <td>{{ r.fecha_salida }}</td>
+          <td>{{ r.estado }}</td>
+          <td>
+            <a href="#">✅ Hacer Check-out</a>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <p>No hay check-outs programados para hoy.</p>
+    {% endif %}
+
+    <br />
+    <a href="{{ url_for('recepcion.panel_recepcionista') }}"
+      >← Volver al panel</a
+    >
+  </body>
+</html>

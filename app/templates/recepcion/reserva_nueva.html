@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Nueva Reserva</title>
+  </head>
+  <body>
+    <h1>➕ Registrar Nueva Reserva</h1>
+
+    <form method="POST">
+      <!-- Cliente -->
+      <label>Cliente:</label><br />
+      <select name="cliente_cedula" required>
+        <option value="">-- Selecciona un cliente --</option>
+        {% for cliente in clientes %}
+        <option value="{{ cliente.cedula }}">
+          {{ cliente.nombre }} - {{ cliente.cedula }}
+        </option>
+        {% endfor %}</select
+      ><br /><br />
+
+      <!-- Habitación -->
+      <label>Habitación:</label><br />
+      <select name="habitacion" required>
+        <option value="">-- Selecciona una habitación --</option>
+        {% for hab in habitaciones %}
+        <option value="{{ hab.idhabitaciones }}">
+          N° {{ hab.numero }} - {{ hab.tipo }}
+        </option>
+        {% endfor %}</select
+      ><br /><br />
+
+      <!-- Check-in -->
+      <label>Fecha de ingreso (check-in):</label><br />
+      <input type="date" name="checkin" required /><br /><br />
+
+      <!-- Check-out -->
+      <label>Fecha de salida (check-out):</label><br />
+      <input type="date" name="checkout" required /><br /><br />
+
+      <!-- Comentario -->
+      <label>Comentario (opcional):</label><br />
+      <textarea name="comentario" rows="3" cols="40"></textarea><br /><br />
+
+      <!-- Abono -->
+      <label>Abono inicial:</label><br />
+      <input
+        type="number"
+        name="abono"
+        value="0"
+        min="0"
+        required
+      /><br /><br />
+
+      <button type="submit">Guardar Reserva</button>
+    </form>
+
+    <br />
+    <a href="{{ url_for('recepcion.panel_recepcionista') }}"
+      >← Volver al panel</a
+    >
+  </body>
+</html>

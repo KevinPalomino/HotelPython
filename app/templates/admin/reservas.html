@@ -49,7 +49,7 @@
           <td>
             {% if reserva.estado %}
             <a
-              href="{{ url_for('admin.anular_reserva', id=reserva.idreservas) }}"
+              href="{{ url_for('admin.ver_reservas', id=reserva.idreservas) }}"
               onclick="return confirm('¿Seguro que deseas anular esta reserva?')"
             >
               ❌ Anular

@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Panel Recepción</title>
+  </head>
+  <body>
+    <h1>👨‍💼 Panel del Recepcionista</h1>
+    <ul>
+      <li>
+        <a href="{{ url_for('recepcion.nueva_reserva') }}"
+          >📅 Registrar nueva reserva</a
+        >
+      </li>
+      <li><a href="#">🏨 Habitaciones ocupadas</a></li>
+      <!-- (Puedes definir esta ruta después) -->
+      <li>
+        <a href="{{ url_for('recepcion.ver_reservas_checkin') }}"
+          >✔️ Check-in</a
+        >
+      </li>
+      <li>
+        <a href="{{ url_for('recepcion.ver_reservas_checkout') }}"
+          >🚪 Check-out</a
+        >
+      </li>
+      <li><a href="#">📦 Consumos</a></li>
+      <!-- (Ruta pendiente por implementar) -->
+      <li>
+        <a href="{{ url_for('recepcion.registrar_cliente') }}"
+          >🧾 Registrar cliente</a
+        >
+      </li>
+      <li><a href="{{ url_for('auth.logout') }}">🔒 Cerrar sesión</a></li>
+    </ul>
+  </body>
+</html>

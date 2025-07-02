@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Registrar Cliente</title>
+  </head>
+  <body>
+    <h1>🧾 Registrar nuevo cliente</h1>
+
+    <form method="POST">
+      <label>Cédula:</label><br />
+      <input type="text" name="cedula" required /><br /><br />
+
+      <label>Nombre:</label><br />
+      <input type="text" name="nombre" required /><br /><br />
+
+      <label>Correo electrónico:</label><br />
+      <input type="email" name="correo" required /><br /><br />
+
+      <label>Teléfono:</label><br />
+      <input type="text" name="telefono" required /><br /><br />
+
+      <label>Dirección:</label><br />
+      <input type="text" name="direccion" required /><br /><br />
+
+      <button type="submit">Registrar cliente</button>
+    </form>
+
+    <br />
+    <a href="{{ url_for('recepcion.panel_recepcionista') }}"
+      >← Volver al panel</a
+    >
+  </body>
+</html>

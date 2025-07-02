@@ -3,7 +3,7 @@ from flask import Flask
 from flask_login import login_manager
 from app.extensions import db, login_manager
 import base64
-
+from app.routes.recepcion_routes import recepcion_bp
 
 
 def create_app():
@@ -38,8 +38,10 @@ def create_app():
     app.register_blueprint(auth_bp, url_prefix='/auth')
     app.register_blueprint(cliente_bp)
     app.register_blueprint(admin_bp)
+    app.register_blueprint(recepcion_bp)
 
     return app
+
 
 # Ejecutar app desde run.py
 app = create_app()
