@@ -11,10 +11,24 @@
       <input type="text" name="nombre" required /><br /><br />
 
       <label>Categoría:</label><br />
-      <select name="categoria">
-        <option value="0">Bebida</option>
-        <option value="1">Alimento</option></select
+      <select name="categoria" onchange="mostrarCampoOtra(this.value)">
+        {% for c in categorias %}
+        <option value="{{ c.id }}">{{ c.nombre }}</option>
+        {% endfor %}
+        <option value="otra">-- Otra --</option></select
       ><br /><br />
+
+      <div id="campo_otro" style="display: none">
+        <label>Nueva categoría:</label><br />
+        <input type="text" name="nueva_categoria" /><br /><br />
+      </div>
+
+      <script>
+        function mostrarCampoOtra(valor) {
+          const campo = document.getElementById("campo_otro");
+          campo.style.display = valor === "otra" ? "block" : "none";
+        }
+      </script>
 
       <label>Cantidad:</label><br />
       <input type="number" name="cantidad" required /><br /><br />

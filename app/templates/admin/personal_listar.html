@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Gestión del Personal</title>
+  </head>
+  <body>
+    <h1>👥 Gestión del Personal</h1>
+
+    <a href="{{ url_for('admin.panel_admin') }}">← Volver al panel</a> |
+    <a href="{{ url_for('admin.nuevo_empleado') }}">➕ Nuevo empleado</a>
+
+    <table border="1" cellpadding="10">
+      <thead>
+        <tr>
+          <th>Cédula</th>
+          <th>Nombre</th>
+          <th>Correo</th>
+          <th>Teléfono</th>
+          <th>Dirección</th>
+          <th>Rol</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for emp in empleados %}
+        <tr>
+          <td>{{ emp.cedula }}</td>
+          <td>{{ emp.nombre }}</td>
+          <td>{{ emp.correo }}</td>
+          <td>{{ emp.telefono }}</td>
+          <td>{{ emp.direccion }}</td>
+          <td>{{ emp.rol.nombre }}</td>
+          <td>
+            <a href="{{ url_for('admin.editar_empleado', cedula=emp.cedula) }}"
+              >✏️ Editar</a
+            >
+            |
+            <a
+              href="{{ url_for('admin.cambiar_contrasena_empleado', cedula=emp.cedula) }}"
+              >🔐 Cambiar clave</a
+            >
+            |
+            <a
+              href="{{ url_for('admin.eliminar_empleado', cedula=emp.cedula) }}"
+              onclick="return confirm('¿Seguro que deseas eliminar este empleado?')"
+              >🗑️ Eliminar</a
+            >
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </body>
+</html>

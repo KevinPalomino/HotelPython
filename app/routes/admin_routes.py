@@ -1,8 +1,10 @@
 # app/routes/admin_routes.py
 from flask import Blueprint, render_template, request, redirect, url_for, flash
 from app import db
-from app.models.models import Habitacion, Categoria, Cama, Inventario, RelacionCama, Foto
+from app.models.models import CategoriaInventario, Habitacion, Categoria, Cama, Inventario, RelacionCama, Foto
 from flask_login import login_required, current_user
+from werkzeug.security import generate_password_hash
+from app.models.models import Persona, Rol
 
 admin_bp = Blueprint('admin', __name__)
 
@@ -188,30 +190,40 @@ def ver_inventario():
 @admin_bp.route('/admin/inventario/nuevo', methods=['GET', 'POST'])
 @login_required
 def nuevo_producto():
-    if current_user.rol.nombre != 'Administrador':
-        flash('Acceso no autorizado', 'danger')
-        return redirect(url_for('auth.login'))
+    categorias = CategoriaInventario.query.all()
 
     if request.method == 'POST':
         nombre = request.form['nombre']
-        categoria = request.form['categoria']
         cantidad = request.form['cantidad']
-        descripcion = request.form['descripcion']
         precio = request.form['precio']
+        descripcion = request.form['descripcion']
 
-        producto = Inventario(
+        categoria_id = request.form['categoria']
+
+        if categoria_id == 'otra':
+            nueva_cat_nombre = request.form['nueva_categoria'].strip()
+            if nueva_cat_nombre:
+                nueva_categoria = CategoriaInventario(nombre=nueva_cat_nombre)
+                db.session.add(nueva_categoria)
+                db.session.flush()
+                categoria_id = nueva_categoria.id
+            else:
+                flash("Debes ingresar el nombre de la nueva categoría", "danger")
+                return redirect(url_for('admin.inventario_nuevo'))
+
+        nuevo = Inventario(
             nombre=nombre,
-            categoria=bool(int(categoria)),  # 0 = bebida, 1 = alimento
-            cantidad=int(cantidad),
-            descripcion=descripcion,
-            precio=int(precio)
+            categoria=int(categoria_id),
+            cantidad=cantidad,
+            precio=precio,
+            descripcion=descripcion
         )
-        db.session.add(producto)
+        db.session.add(nuevo)
         db.session.commit()
         flash("Producto agregado correctamente", "success")
         return redirect(url_for('admin.ver_inventario'))
 
-    return render_template('admin/inventario_nuevo.html')
+    return render_template("admin/inventario_nuevo.html", categorias=categorias)
 
 
 @admin_bp.route('/admin/inventario/editar/<int:id>', methods=['GET', 'POST'])
@@ -249,3 +261,120 @@ def eliminar_producto(id):
     db.session.commit()
     flash("Producto eliminado correctamente", "info")
     return redirect(url_for('admin.ver_inventario'))
+
+
+# RUTA PARA EL APARTADO DEL PERSONAL:
+@admin_bp.route('/admin/personal')
+@login_required
+def ver_personal():
+    if current_user.rol.nombre != 'Administrador':
+        flash('Acceso no autorizado', 'danger')
+        return redirect(url_for('auth.login'))
+
+    from app.models.models import Persona
+    empleados = Persona.query.all()
+    return render_template('admin/personal_listar.html', empleados=empleados)
+
+
+# RUTA PARA AGREGAR NUEVOS EMPLEADOS:
+@admin_bp.route('/admin/personal/nuevo', methods=['GET', 'POST'])
+@login_required
+def nuevo_empleado():
+    if current_user.rol.nombre != 'Administrador':
+        flash('Acceso no autorizado', 'danger')
+        return redirect(url_for('auth.login'))
+
+    roles = Rol.query.all()
+
+    if request.method == 'POST':
+        cedula = request.form['cedula']
+        nombre = request.form['nombre']
+        correo = request.form['correo']
+        telefono = request.form['telefono']
+        direccion = request.form['direccion']
+        contrasena = generate_password_hash(request.form['contrasena'])
+        rol_id = request.form['rol']
+
+        persona = Persona(
+            cedula=cedula,
+            nombre=nombre,
+            correo=correo,
+            telefono=telefono,
+            direccion=direccion,
+            contrasena=contrasena,
+            roles_idroles=rol_id
+        )
+        db.session.add(persona)
+        db.session.commit()
+        flash('Empleado registrado exitosamente', 'success')
+        return redirect(url_for('admin.ver_personal'))
+
+    return render_template('admin/personal_nuevo.html', roles=roles)
+
+
+@admin_bp.route('/admin/personal/editar/<int:cedula>', methods=['GET', 'POST'])
+@login_required
+def editar_empleado(cedula):
+    if current_user.rol.nombre != 'Administrador':
+        flash('Acceso no autorizado', 'danger')
+        return redirect(url_for('auth.login'))
+
+    persona = Persona.query.get_or_404(cedula)
+    roles = Rol.query.all()
+
+    if request.method == 'POST':
+        persona.nombre = request.form['nombre']
+        persona.correo = request.form['correo']
+        persona.telefono = request.form['telefono']
+        persona.direccion = request.form['direccion']
+        persona.roles_idroles = int(request.form['rol'])
+
+        db.session.commit()
+        flash('Empleado actualizado correctamente', 'success')
+        return redirect(url_for('admin.ver_personal'))
+
+    return render_template('admin/personal_editar.html', persona=persona, roles=roles)
+
+
+@admin_bp.route('/admin/personal/cambiar_clave/<int:cedula>', methods=['GET', 'POST'])
+@login_required
+def cambiar_contrasena_empleado(cedula):
+    if current_user.rol.nombre != 'Administrador':
+        flash('Acceso no autorizado', 'danger')
+        return redirect(url_for('auth.login'))
+
+    persona = Persona.query.get_or_404(cedula)
+
+    if request.method == 'POST':
+        nueva_clave = request.form['nueva_contrasena']
+        confirmar = request.form['confirmar_contrasena']
+
+        if nueva_clave != confirmar:
+            flash('Las contraseñas no coinciden', 'danger')
+            return redirect(request.url)
+
+        persona.contrasena = generate_password_hash(nueva_clave)
+        db.session.commit()
+        flash('Contraseña actualizada exitosamente.', 'success')
+        return redirect(url_for('admin.ver_personal'))
+
+    return render_template('admin/cambiar_contrasena.html', persona=persona)
+
+
+@admin_bp.route('/admin/personal/eliminar/<int:cedula>')
+@login_required
+def eliminar_empleado(cedula):
+    if current_user.rol.nombre != 'Administrador':
+        flash('Acceso denegado', 'danger')
+        return redirect(url_for('auth.login'))
+
+    persona = Persona.query.get_or_404(cedula)
+
+    if persona.cedula == current_user.cedula:
+        flash('No puedes eliminar tu propio usuario', 'warning')
+        return redirect(url_for('admin.ver_personal'))
+
+    db.session.delete(persona)
+    db.session.commit()
+    flash('Empleado eliminado correctamente.', 'info')
+    return redirect(url_for('admin.ver_personal'))

@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Cambiar contraseña</title>
+  </head>
+  <body>
+    <h1>🔒 Cambiar contraseña</h1>
+    <p><strong>Usuario:</strong> {{ persona.nombre }} ({{ persona.correo }})</p>
+
+    <form method="POST">
+      <label>Nueva contraseña:</label><br />
+      <input type="password" name="nueva_contrasena" required /><br /><br />
+
+      <label>Confirmar nueva contraseña:</label><br />
+      <input type="password" name="confirmar_contrasena" required /><br /><br />
+
+      <button type="submit">Guardar cambios</button>
+    </form>
+
+    <br />
+    <a href="{{ url_for('admin.ver_personal') }}">← Volver a personal</a>
+  </body>
+</html>

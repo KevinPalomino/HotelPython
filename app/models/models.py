@@ -9,6 +9,15 @@ class EstadoHabitacion:
     ocupada = "ocupada"
 
 
+class CategoriaInventario(db.Model):
+    __tablename__ = 'categorias_inventario'
+    id = db.Column(db.Integer, primary_key=True)
+    nombre = db.Column(db.String(45), nullable=False)
+
+    productos = db.relationship(
+        'Inventario', backref='categoria_obj', lazy=True)
+
+
 class Categoria(db.Model):
     __tablename__ = 'categorias'
     idcategorias = db.Column(db.Integer, primary_key=True)
@@ -123,12 +132,11 @@ class Inventario(db.Model):
     __tablename__ = 'inventario'
     idinventario = db.Column(db.Integer, primary_key=True)
     nombre = db.Column(db.String(45))
-    categoria = db.Column(db.Boolean)  # Puede ajustarse a Enum si es necesario
+    categoria = db.Column(db.Integer, db.ForeignKey(
+        'categorias_inventario.id'))  # FK correcta
     cantidad = db.Column(db.Integer)
     descripcion = db.Column(db.Text)
     precio = db.Column(db.BigInteger)
-
-    consumos = db.relationship('Consumo', backref='producto', lazy=True)
 
 
 class Consumo(db.Model):

@@ -4,6 +4,8 @@ from flask_login import login_manager
 from app.extensions import db, login_manager
 import base64
 
+
+
 def create_app():
     app = Flask(__name__)
 
