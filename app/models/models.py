@@ -1,6 +1,7 @@
 # app/models/models.py
 from app.extensions import db
 from flask_login import UserMixin
+from datetime import datetime
 
 
 class EstadoHabitacion:
@@ -116,3 +117,32 @@ class DetalleReserva(db.Model):
     habitaciones_idhabitaciones = db.Column(db.Integer, db.ForeignKey(
         'habitaciones.idhabitaciones'), nullable=False)
     habitacion = db.relationship('Habitacion', backref='detalles', lazy=True)
+
+
+class Inventario(db.Model):
+    __tablename__ = 'inventario'
+    idinventario = db.Column(db.Integer, primary_key=True)
+    nombre = db.Column(db.String(45))
+    categoria = db.Column(db.Boolean)  # Puede ajustarse a Enum si es necesario
+    cantidad = db.Column(db.Integer)
+    descripcion = db.Column(db.Text)
+    precio = db.Column(db.BigInteger)
+
+    consumos = db.relationship('Consumo', backref='producto', lazy=True)
+
+
+class Consumo(db.Model):
+    __tablename__ = 'consumos'
+    idconsumos = db.Column(db.Integer, primary_key=True)
+    fecha = db.Column(db.DateTime, default=datetime.utcnow)
+    cantidad = db.Column(db.Integer)
+    total = db.Column(db.Integer)
+    estado = db.Column(db.Boolean, default=True)
+
+    inventario_idinventario = db.Column(db.Integer, db.ForeignKey(
+        'inventario.idinventario'), nullable=False)
+    detalle_reserva_iddetalle_reserva = db.Column(db.Integer, db.ForeignKey(
+        'detalle_reserva.iddetalle_reserva'), nullable=False)
+
+    detalle_reserva = db.relationship(
+        'DetalleReserva', backref='consumos', lazy=True)

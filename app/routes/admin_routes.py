@@ -1,7 +1,7 @@
 # app/routes/admin_routes.py
 from flask import Blueprint, render_template, request, redirect, url_for, flash
 from app import db
-from app.models.models import Habitacion, Categoria, Cama, RelacionCama, Foto
+from app.models.models import Habitacion, Categoria, Cama, Inventario, RelacionCama, Foto
 from flask_login import login_required, current_user
 
 admin_bp = Blueprint('admin', __name__)
@@ -172,3 +172,80 @@ def ver_reservas():
 
     reservas = Reserva.query.all()
     return render_template('admin/reservas.html', reservas=reservas)
+
+
+@admin_bp.route('/admin/inventario')
+@login_required
+def ver_inventario():
+    if current_user.rol.nombre != 'Administrador':
+        flash('Acceso no autorizado', 'danger')
+        return redirect(url_for('auth.login'))
+
+    productos = Inventario.query.all()
+    return render_template('admin/inventario_listar.html', productos=productos)
+
+
+@admin_bp.route('/admin/inventario/nuevo', methods=['GET', 'POST'])
+@login_required
+def nuevo_producto():
+    if current_user.rol.nombre != 'Administrador':
+        flash('Acceso no autorizado', 'danger')
+        return redirect(url_for('auth.login'))
+
+    if request.method == 'POST':
+        nombre = request.form['nombre']
+        categoria = request.form['categoria']
+        cantidad = request.form['cantidad']
+        descripcion = request.form['descripcion']
+        precio = request.form['precio']
+
+        producto = Inventario(
+            nombre=nombre,
+            categoria=bool(int(categoria)),  # 0 = bebida, 1 = alimento
+            cantidad=int(cantidad),
+            descripcion=descripcion,
+            precio=int(precio)
+        )
+        db.session.add(producto)
+        db.session.commit()
+        flash("Producto agregado correctamente", "success")
+        return redirect(url_for('admin.ver_inventario'))
+
+    return render_template('admin/inventario_nuevo.html')
+
+
+@admin_bp.route('/admin/inventario/editar/<int:id>', methods=['GET', 'POST'])
+@login_required
+def editar_producto(id):
+    if current_user.rol.nombre != 'Administrador':
+        flash('Acceso no autorizado', 'danger')
+        return redirect(url_for('auth.login'))
+
+    producto = Inventario.query.get_or_404(id)
+
+    if request.method == 'POST':
+        producto.nombre = request.form['nombre']
+        producto.categoria = bool(int(request.form['categoria']))
+        producto.cantidad = int(request.form['cantidad'])
+        producto.descripcion = request.form['descripcion']
+        producto.precio = int(request.form['precio'])
+
+        db.session.commit()
+        flash("Producto actualizado correctamente", "success")
+        return redirect(url_for('admin.ver_inventario'))
+
+    return render_template('admin/inventario_editar.html', producto=producto)
+
+
+@admin_bp.route('/admin/inventario/eliminar/<int:id>')
+@login_required
+def eliminar_producto(id):
+    if current_user.rol.nombre != 'Administrador':
+        flash('Acceso no autorizado', 'danger')
+        return redirect(url_for('auth.login'))
+
+    producto = Inventario.query.get_or_404(id)
+    db.session.delete(producto)
+    db.session.commit()
+    flash("Producto eliminado correctamente", "info")
+    return redirect(url_for('admin.ver_inventario'))

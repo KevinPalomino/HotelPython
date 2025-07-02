@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Inventario</title>
+  </head>
+  <body>
+    <h1>📦 Gestión de Inventario</h1>
+    <a href="{{ url_for('admin.panel_admin') }}">← Volver al panel</a> |
+    <a href="{{ url_for('admin.nuevo_producto') }}">➕ Agregar producto</a>
+
+    <table border="1" cellpadding="10">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Nombre</th>
+          <th>Categoría</th>
+          <th>Cantidad</th>
+          <th>Precio</th>
+          <th>Descripción</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for p in productos %}
+        <tr>
+          <td>{{ p.idinventario }}</td>
+          <td>{{ p.nombre }}</td>
+          <td>{{ "Alimento" if p.categoria else "Bebida" }}</td>
+          <td>{{ p.cantidad }}</td>
+          <td>${{ "{:,.0f}".format(p.precio) }}</td>
+          <td>{{ p.descripcion }}</td>
+          <td>
+            <a href="{{ url_for('admin.editar_producto', id=p.idinventario) }}"
+              >✏️ Editar</a
+            >
+            |
+            <a
+              href="{{ url_for('admin.eliminar_producto', id=p.idinventario) }}"
+              onclick="return confirm('¿Estás seguro de eliminar este producto?')"
+              >🗑️ Eliminar</a
+            >
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </body>
+</html>
