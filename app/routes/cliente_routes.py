@@ -1,7 +1,7 @@
 # app/routes/cliente_routes.py
-from flask import Blueprint, render_template, request, redirect, url_for, flash
+from flask import Blueprint, render_template, request, redirect, url_for, flash, Response
 from app import db
-from app.models.models import Habitacion, Cliente, Persona, Reserva, DetalleReserva
+from app.models.models import Habitacion, Cliente, Persona, Reserva, DetalleReserva, Foto
 from datetime import datetime, date
 
 cliente_bp = Blueprint('cliente', __name__)
@@ -9,13 +9,19 @@ cliente_bp = Blueprint('cliente', __name__)
 
 @cliente_bp.route('/')
 def inicio():
-    return "Sistema Hotel funcionando correctamente"
+    return redirect(url_for('cliente.ver_habitaciones'))
 
 
 @cliente_bp.route('/habitaciones')
 def ver_habitaciones():
     habitaciones = Habitacion.query.filter_by(estado=True).all()
     return render_template('cliente/habitaciones.html', habitaciones=habitaciones)
+
+
+@cliente_bp.route('/imagen_habitacion/<int:idfoto>')
+def imagen_habitacion(idfoto):
+    foto = Foto.query.get_or_404(idfoto)
+    return Response(foto.fotos, mimetype='image/jpeg')
 
 
 @cliente_bp.route('/reservar/<int:id>', methods=['GET', 'POST'])

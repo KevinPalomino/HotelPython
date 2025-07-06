@@ -1,5 +1,7 @@
 # app/routes/admin_routes.py
-from flask import Blueprint, render_template, request, redirect, url_for, flash
+import io
+from app.models.models import TipoHabitacion  # asegúrate de importar
+from flask import Blueprint, render_template, request, redirect, send_file, url_for, flash
 from app import db
 from app.models.models import CategoriaInventario, Habitacion, Categoria, Cama, Inventario, RelacionCama, Foto, TipoHabitacion
 from flask_login import login_required, current_user
@@ -125,11 +127,14 @@ def editar_habitacion(id):
     habitacion = Habitacion.query.get_or_404(id)
     categorias = Categoria.query.all()
     camas = Cama.query.all()
+    tipos = TipoHabitacion.query.all()
 
     if request.method == 'POST':
-        habitacion.tipo = request.form['tipo']
-        habitacion.capacidad = request.form['capacidad']
-        habitacion.precio = request.form['precio']
+        # 🔁 Aquí cambiamos el nombre del campo de tipo
+        # <- el select ahora se llama tipo_id
+        habitacion.tipos_idtipo = int(request.form['tipo_id'])
+        habitacion.capacidad = int(request.form['capacidad'])
+        habitacion.precio = int(request.form['precio'])
         habitacion.estado = 'estado' in request.form
         habitacion.categorias_idcategorias = int(request.form['categoria'])
 
@@ -142,38 +147,68 @@ def editar_habitacion(id):
         habitacion.aseo = 'aseo' in request.form
         habitacion.caja_fuerte = 'caja_fuerte' in request.form
 
-        # Eliminar camas actuales
-    RelacionCama.query.filter_by(habitaciones_idhabitaciones=id).delete()
+        # 🔄 Limpiar relaciones de camas previas
+        RelacionCama.query.filter_by(habitaciones_idhabitaciones=id).delete()
 
-# Leer cantidades nuevas desde el formulario
-    camas_dict = {}
-    for key, value in request.form.items():
-        if key.startswith('camas[') and key.endswith(']'):
-            id_cama = int(key[6:-1])
-        cantidad = int(value)
-        if cantidad > 0:
-            camas_dict[id_cama] = cantidad
+        # 🧮 Leer nuevas cantidades de camas desde el formulario
+        camas_dict = {}
+        for key, value in request.form.items():
+            if key.startswith('camas[') and key.endswith(']'):
+                id_cama = int(key[6:-1])
+                cantidad = int(value)
+                if cantidad > 0:
+                    camas_dict[id_cama] = cantidad
 
-# Insertar nuevas relaciones
-    for idcama, cantidad in camas_dict.items():
-        for _ in range(cantidad):
-            nueva_rel = RelacionCama(
-                camas_idcamas=idcama,
-                habitaciones_idhabitaciones=id
-            )
-        db.session.add(nueva_rel)
+        for idcama, cantidad in camas_dict.items():
+            for _ in range(cantidad):
+                nueva_rel = RelacionCama(
+                    camas_idcamas=idcama,
+                    habitaciones_idhabitaciones=id
+                )
+                db.session.add(nueva_rel)
+
+        for archivo in request.files.getlist('fotos'):
+            if archivo and archivo.filename != '':
+                nueva_foto = Foto(fotos=archivo.read(),
+                                  habitaciones_idhabitaciones=id)
+                db.session.add(nueva_foto)
 
         db.session.commit()
         flash('Habitación actualizada correctamente.', 'success')
         return redirect(url_for('admin.listar_habitaciones'))
 
-    # Cuenta cuántas veces aparece cada tipo de cama en la habitación
+    # Mostrar cantidades actuales de camas
     camas_relacionadas = Counter([r.camas_idcamas for r in habitacion.camas])
+
     return render_template('admin/editar_habitacion.html',
                            habitacion=habitacion,
                            categorias=categorias,
                            camas=camas,
+                           tipos=tipos,  # ← importante
                            camas_relacionadas=camas_relacionadas)
+
+
+@admin_bp.route('/admin/foto/<int:id>')
+@login_required
+def ver_foto_admin(id):
+    foto = Foto.query.get_or_404(id)
+    return send_file(
+        io.BytesIO(foto.fotos),
+        mimetype='image/jpeg'
+    )
+
+
+@admin_bp.route('/admin/foto/eliminar/<int:id>', methods=['POST'])
+@login_required
+def eliminar_foto_admin(id):
+    foto = Foto.query.get_or_404(id)
+    habitacion_id = foto.habitaciones_idhabitaciones
+
+    db.session.delete(foto)
+    db.session.commit()
+
+    flash('Foto eliminada correctamente.', 'info')
+    return redirect(url_for('admin.editar_habitacion', id=habitacion_id))
 
 
 @admin_bp.route('/admin/habitaciones/eliminar/<int:id>')
