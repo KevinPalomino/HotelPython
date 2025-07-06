@@ -1,10 +1,12 @@
 # app/routes/admin_routes.py
 from flask import Blueprint, render_template, request, redirect, url_for, flash
 from app import db
-from app.models.models import CategoriaInventario, Habitacion, Categoria, Cama, Inventario, RelacionCama, Foto
+from app.models.models import CategoriaInventario, Habitacion, Categoria, Cama, Inventario, RelacionCama, Foto, TipoHabitacion
 from flask_login import login_required, current_user
 from werkzeug.security import generate_password_hash
 from app.models.models import Persona, Rol
+from collections import Counter
+
 
 admin_bp = Blueprint('admin', __name__)
 
@@ -18,7 +20,6 @@ def panel_admin():
     return render_template('admin/panel_admin.html')
 
 
-
 @admin_bp.route('/admin/habitaciones/nueva', methods=['GET', 'POST'])
 @login_required
 def nueva_habitacion():
@@ -28,9 +29,10 @@ def nueva_habitacion():
 
     categorias = Categoria.query.all()
     camas = Cama.query.all()
+    tipos = TipoHabitacion.query.all()  # ✅ AÑADIDO
 
     if request.method == 'POST':
-        tipo = request.form['tipo']
+        tipo_id = request.form['tipo_id']
         capacidad = request.form['capacidad']
         precio = request.form['precio']
 
@@ -55,7 +57,7 @@ def nueva_habitacion():
         caja_fuerte = 'caja_fuerte' in request.form
 
         habitacion = Habitacion(
-            tipo=tipo,
+            tipos_idtipo=tipo_id,
             capacidad=capacidad,
             precio=precio,
             estado=True,
@@ -72,11 +74,21 @@ def nueva_habitacion():
         db.session.add(habitacion)
         db.session.flush()
 
-        camas_seleccionadas = request.form.getlist('camas')
-        for cama_id in camas_seleccionadas:
-            relacion = RelacionCama(camas_idcamas=int(
-                cama_id), habitaciones_idhabitaciones=habitacion.idhabitaciones)
-            db.session.add(relacion)
+        camas_dict = {}
+        for key, value in request.form.items():
+            if key.startswith('camas[') and key.endswith(']'):
+                id_cama = int(key[6:-1])
+                cantidad = int(value)
+                if cantidad > 0:
+                    camas_dict[id_cama] = cantidad
+
+        for idcama, cantidad in camas_dict.items():
+            for _ in range(cantidad):
+                relacion = RelacionCama(
+                    camas_idcamas=idcama,
+                    habitaciones_idhabitaciones=habitacion.idhabitaciones
+                )
+                db.session.add(relacion)
 
         for archivo in request.files.getlist('fotos'):
             if archivo:
@@ -88,7 +100,7 @@ def nueva_habitacion():
         flash('Habitación registrada correctamente')
         return redirect(url_for('admin.nueva_habitacion'))
 
-    return render_template('admin/nueva_habitacion.html', categorias=categorias, camas=camas)
+    return render_template('admin/nueva_habitacion.html', categorias=categorias, camas=camas, tipos=tipos)
 
 
 @admin_bp.route('/admin/habitaciones')
@@ -129,18 +141,33 @@ def editar_habitacion(id):
         habitacion.aseo = 'aseo' in request.form
         habitacion.caja_fuerte = 'caja_fuerte' in request.form
 
-        RelacionCama.query.filter_by(habitaciones_idhabitaciones=id).delete()
-        camas_seleccionadas = request.form.getlist('camas')
-        for cama_id in camas_seleccionadas:
-            nueva_rel = RelacionCama(camas_idcamas=int(
-                cama_id), habitaciones_idhabitaciones=id)
-            db.session.add(nueva_rel)
+        # Eliminar camas actuales
+    RelacionCama.query.filter_by(habitaciones_idhabitaciones=id).delete()
+
+# Leer cantidades nuevas desde el formulario
+    camas_dict = {}
+    for key, value in request.form.items():
+        if key.startswith('camas[') and key.endswith(']'):
+            id_cama = int(key[6:-1])
+        cantidad = int(value)
+        if cantidad > 0:
+            camas_dict[id_cama] = cantidad
+
+# Insertar nuevas relaciones
+    for idcama, cantidad in camas_dict.items():
+        for _ in range(cantidad):
+            nueva_rel = RelacionCama(
+                camas_idcamas=idcama,
+                habitaciones_idhabitaciones=id
+            )
+        db.session.add(nueva_rel)
 
         db.session.commit()
         flash('Habitación actualizada correctamente.', 'success')
         return redirect(url_for('admin.listar_habitaciones'))
 
-    camas_relacionadas = [r.camas_idcamas for r in habitacion.camas]
+    # Cuenta cuántas veces aparece cada tipo de cama en la habitación
+    camas_relacionadas = Counter([r.camas_idcamas for r in habitacion.camas])
     return render_template('admin/editar_habitacion.html',
                            habitacion=habitacion,
                            categorias=categorias,

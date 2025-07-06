@@ -39,6 +39,8 @@ class Cama(db.Model):
     __tablename__ = 'camas'
     idcamas = db.Column(db.Integer, primary_key=True)
     nombre = db.Column(db.String(45))
+    capacidad = db.Column(db.Integer, nullable=False,
+                          default=1)  # ← nuevo campo
 
 
 class RelacionCama(db.Model):
@@ -49,10 +51,25 @@ class RelacionCama(db.Model):
         db.Integer, db.ForeignKey('habitaciones.idhabitaciones'))
 
 
+class TipoHabitacion(db.Model):
+    __tablename__ = 'tipos_habitacion'
+    idtipo = db.Column(db.Integer, primary_key=True)
+    nombre = db.Column(db.String(100), nullable=False)
+    descripcion = db.Column(db.Text)
+
+
 class Habitacion(db.Model):
     __tablename__ = 'habitaciones'
     idhabitaciones = db.Column(db.Integer, primary_key=True)
-    tipo = db.Column(db.Integer)
+
+    tipos_idtipo = db.Column(
+        db.Integer, db.ForeignKey('tipos_habitacion.idtipo'), nullable=False)
+    tipo = db.relationship(
+        'TipoHabitacion', backref='habitaciones_asignadas', lazy=True)
+
+    categorias_idcategorias = db.Column(
+        db.Integer, db.ForeignKey('categorias.idcategorias'), nullable=False)
+
     capacidad = db.Column(db.Integer)
     estado = db.Column(db.String(25), nullable=False,
                        default=EstadoHabitacion.disponible)
@@ -65,12 +82,8 @@ class Habitacion(db.Model):
     bar = db.Column(db.Boolean)
     aseo = db.Column(db.Boolean)
     caja_fuerte = db.Column(db.Boolean)
-    categorias_idcategorias = db.Column(
-        db.Integer, db.ForeignKey('categorias.idcategorias'))
 
-    # ✅ Relación que te faltaba
     camas = db.relationship('RelacionCama', backref='habitacion', lazy=True)
-
     fotos = db.relationship('Foto', backref='habitacion', lazy=True)
 
 

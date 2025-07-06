@@ -67,21 +67,32 @@
             </div>
 
             <div class="form-group">
-                <label class="form-label">
-                    <i class="fas fa-bed"></i>
-                    Tipos de Camas
-                </label>
-                <div class="checkbox-group">
-                    {% for cama in camas %}
-                        <div class="checkbox-item">
-                            <input type="checkbox" id="cama_{{ cama.idcamas }}" 
-                                   name="camas" value="{{ cama.idcamas }}"
-                                   {% if cama.idcamas in camas_relacionadas %}checked{% endif %}>
-                            <label for="cama_{{ cama.idcamas }}">{{ cama.nombre }}</label>
-                        </div>
-                    {% endfor %}
-                </div>
-            </div>
+    <label class="form-label">
+        <i class="fas fa-bed"></i>
+        Distribución de Camas
+    </label>
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Tipo de Cama</th>
+                <th>Capacidad por Cama</th>
+                <th>Cantidad</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for cama in camas %}
+            <tr>
+                <td>{{ cama.nombre }}</td>
+                <td>{{ cama.capacidad }}</td>
+                <td>
+                    <input type="number" name="camas[{{ cama.idcamas }}]" min="0" value="{{ camas_relacionadas.get(cama.idcamas, 0) }}" class="form-input" style="width: 70px;">
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
 
             <div class="form-group">
                 <div class="checkbox-item">
