@@ -415,6 +415,8 @@ def editar_empleado(cedula):
     return render_template('admin/personal_editar.html', persona=persona, roles=roles)
 
 
+'''
+#CAMBIAR CONTRASEÑA DE LOS EMPLEADOS
 @admin_bp.route('/admin/personal/cambiar_clave/<int:cedula>', methods=['GET', 'POST'])
 @login_required
 def cambiar_contrasena_empleado(cedula):
@@ -438,6 +440,7 @@ def cambiar_contrasena_empleado(cedula):
         return redirect(url_for('admin.ver_personal'))
 
     return render_template('admin/cambiar_contrasena.html', persona=persona)
+'''
 
 
 @admin_bp.route('/admin/personal/eliminar/<int:cedula>')
