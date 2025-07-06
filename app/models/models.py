@@ -43,12 +43,25 @@ class Cama(db.Model):
                           default=1)  # ← nuevo campo
 
 
+'''
 class RelacionCama(db.Model):
     __tablename__ = 'relacion_cama'
     idrelacion_cama = db.Column(db.Integer, primary_key=True)
     camas_idcamas = db.Column(db.Integer, db.ForeignKey('camas.idcamas'))
     habitaciones_idhabitaciones = db.Column(
         db.Integer, db.ForeignKey('habitaciones.idhabitaciones'))
+'''
+
+
+class RelacionCama(db.Model):
+    __tablename__ = 'relacion_cama'
+    idrelacion_cama = db.Column(db.Integer, primary_key=True)
+    camas_idcamas = db.Column(db.Integer, db.ForeignKey('camas.idcamas'))
+    habitaciones_idhabitaciones = db.Column(
+        db.Integer, db.ForeignKey('habitaciones.idhabitaciones'))
+
+    cama = db.relationship('Cama', backref='relaciones',
+                           lazy=True)  # ← importante
 
 
 class TipoHabitacion(db.Model):

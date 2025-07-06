@@ -18,6 +18,13 @@ Management{% endblock %} {% block content %}
       style="display: flex; justify-content: space-between; align-items: center"
     >
       <h2 class="card-title">Listado de Habitaciones</h2>
+      <a
+        href="{{ url_for('admin.habitaciones_inactivas') }}"
+        class="btn btn-secondary"
+        style="margin-right: 0.5rem"
+      >
+        <i class="fas fa-eye-slash"></i> Ver Inactivas
+      </a>
       <a href="{{ url_for('admin.nueva_habitacion') }}" class="btn btn-success">
         <i class="fas fa-plus"></i>
         Nueva Habitación
@@ -48,8 +55,11 @@ Management{% endblock %} {% block content %}
           <td class="room-price">${{ "{:,.0f}".format(habitacion.precio) }}</td>
           <td>{{ habitacion.categoria.nombre }}</td>
           <td>
-            {% for cama in habitacion.camas %}
-            <span class="amenity-tag">{{ cama.nombre }}</span>
+            {% set contador = {} %} {% for rel in habitacion.camas %} {% set
+            nombre = rel.cama.nombre %} {% set contador =
+            contador.update({nombre: contador.get(nombre, 0) + 1}) or contador
+            %} {% endfor %} {% for nombre, cantidad in contador.items() %}
+            <span class="amenity-tag">{{ cantidad }} x {{ nombre }}</span>
             {% endfor %}
           </td>
           <td>

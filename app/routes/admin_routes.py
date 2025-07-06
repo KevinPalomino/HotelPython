@@ -110,7 +110,8 @@ def listar_habitaciones():
         flash('Acceso restringido', 'danger')
         return redirect(url_for('auth.login'))
 
-    habitaciones = Habitacion.query.all()
+    # Muestra unicamente las habitaciones activas.
+    habitaciones = Habitacion.query.filter_by(estado=1).all()
     return render_template('admin/listar_habitaciones.html', habitaciones=habitaciones)
 
 
@@ -183,6 +184,27 @@ def eliminar_habitacion(id):
     db.session.commit()
     flash('Habitación marcada como inactiva.', 'info')
     return redirect(url_for('admin.listar_habitaciones'))
+
+
+@admin_bp.route('/admin/habitaciones/inactivas')
+@login_required
+def habitaciones_inactivas():
+    if current_user.rol.nombre != 'Administrador':
+        flash('Acceso no autorizado', 'danger')
+        return redirect(url_for('auth.login'))
+
+    habitaciones = Habitacion.query.filter_by(estado=False).all()
+    return render_template('admin/habitaciones_inactivas.html', habitaciones=habitaciones)
+
+
+@admin_bp.route('/admin/habitaciones/activar/<int:id>')
+@login_required
+def activar_habitacion(id):
+    habitacion = Habitacion.query.get_or_404(id)
+    habitacion.estado = True
+    db.session.commit()
+    flash('Habitación habilitada nuevamente.', 'success')
+    return redirect(url_for('admin.habitaciones_inactivas'))
 
 
 @admin_bp.route('/admin/reservas')
