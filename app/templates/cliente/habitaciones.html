@@ -1,45 +1,65 @@
-<!-- templates/cliente/habitaciones.html -->
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <title>Habitaciones Disponibles</title>
-</head>
-<body>
-    <h1>Habitaciones Disponibles</h1>
-    {% for hab in habitaciones %}
-        <div style="border:1px solid #ccc; padding:10px; margin:10px;">
-            <h2>Habitación #{{ hab.idhabitaciones }}</h2>
-            <p><strong>Categoría:</strong> {{ hab.categoria.nombre }}</p>
-            <p><strong>Capacidad:</strong> {{ hab.capacidad }} personas</p>
-            <p><strong>Precio:</strong> ${{ "{:,.0f}".format(hab.precio) }}</p>
-            <p><strong>Amenidades:</strong>
-                {% if hab.wifi %} Wifi {% endif %}
-                {% if hab.aire_acondicionado %} - A/A {% endif %}
-                {% if hab.Tina %} - Tina {% endif %}
-                {% if hab.ventilador %} - Ventilador {% endif %}
-                {% if hab.TV %} - TV {% endif %}
-                {% if hab.bar %} - Bar {% endif %}
-                {% if hab.caja_fuerte %} - Caja Fuerte {% endif %}
-            </p>
-            <p><strong>Camas:</strong>
-                <ul>
-                    {% for rel in hab.camas %}
-                        <li>{{ rel.cama.nombre }}</li>
-                    {% endfor %}
-                </ul>
-            </p>
-            <p><strong>Fotos:</strong></p>
-            {% for foto in hab.fotos %}
-                <img src="data:image/jpeg;base64,{{ foto.fotos | b64encode }}" width="200">
+{% extends "base.html" %}
 
-            {% endfor %}
+{% block title %}Habitaciones Disponibles - Hotel Management{% endblock %}
 
-              <a href="{{ url_for('cliente.reservar_habitacion', id=hab.idhabitaciones) }}">
-        <button>Reservar</button>
-        </a>
+{% block content %}
+<h1 class="page-title">
+    <i class="fas fa-bed"></i>
+    Habitaciones Disponibles
+</h1>
+
+<div class="room-grid">
+    {% for habitacion in habitaciones %}
+    <div class="room-card">
+        <img src="/PROYECTO_HOTEL_2025/BD/imagenhotel.png" alt="Habitación {{ habitacion.tipo }}" class="room-image">
+        <div class="room-content">
+            <h3 class="room-title">{{ habitacion.tipo }}</h3>
+            
+            <div class="room-details">
+                <div class="room-detail">
+                    <span><i class="fas fa-users"></i> Capacidad:</span>
+                    <span>{{ habitacion.capacidad }} personas</span>
+                </div>
+                <div class="room-detail">
+                    <span><i class="fas fa-tag"></i> Categoría:</span>
+                    <span>{{ habitacion.categoria.nombre }}</span>
+                </div>
+                <div class="room-detail">
+                    <span><i class="fas fa-bed"></i> Camas:</span>
+                    <div class="amenities">
+                        {% for cama in habitacion.camas %}
+                            <span class="amenity-tag">{{ cama.nombre }}</span>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+
+            <div class="room-price">
+                ${{ "{:,.0f}".format(habitacion.precio) }}
+                <small style="font-size: 0.8rem; color: var(--text-light);">por noche</small>
+            </div>
+
+            <div class="btn-group">
+                <a href="{{ url_for('cliente.reservar_habitacion', id=habitacion.idhabitaciones) }}" 
+                   class="btn btn-primary">
+                    <i class="fas fa-calendar-plus"></i>
+                    Reservar Ahora
+                </a>
+            </div>
         </div>
-      
+    </div>
     {% endfor %}
-</body>
-</html>
+</div>
+
+{% if not habitaciones %}
+<div class="card text-center">
+    <div class="card-header">
+        <h2 class="card-title">
+            <i class="fas fa-info-circle"></i>
+            No hay habitaciones disponibles
+        </h2>
+    </div>
+    <p>En este momento no tenemos habitaciones disponibles. Por favor, inténtelo más tarde.</p>
+</div>
+{% endif %}
+{% endblock %}

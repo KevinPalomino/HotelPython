@@ -1,66 +1,77 @@
-<!DOCTYPE html>
-<html lang="es">
-  <head>
-    <meta charset="UTF-8" />
-    <title>Reservas</title>
-  </head>
-  <body>
-    <h1>Listado de Reservas</h1>
-    <a href="{{ url_for('admin.panel_admin') }}">← Volver al panel</a>
+{% extends "base.html" %}
 
-    <table border="1" cellpadding="10" cellspacing="0">
-      <thead>
-        <tr>
-          <th>ID</th>
-          <th>Cliente</th>
-          <th>Correo</th>
-          <th>Habitación</th>
-          <th>Check-in</th>
-          <th>Check-out</th>
-          <th>Abono</th>
-          <th>Estado</th>
-          <th>Acción</th>
-          <!-- Nueva columna -->
-        </tr>
-      </thead>
-      <tbody>
-        {% for reserva in reservas %}
-        <tr>
-          <td>{{ reserva.idreservas }}</td>
-          <td>{{ reserva.cliente.persona.nombre }}</td>
-          <td>{{ reserva.cliente.persona.correo }}</td>
-          <td>
-            <ul>
-              {% for detalle in reserva.detalle %}
-              <li>Habitación #{{ detalle.habitacion.idhabitaciones }}</li>
-              {% endfor %}
-            </ul>
-          </td>
-          <td>{{ reserva.checkin }}</td>
-          <td>{{ reserva.checkout }}</td>
-          <td>${{ "{:,.0f}".format(reserva.abono) }}</td>
-          <td>
-            {% if reserva.estado %}
-            <span style="color: green">Activa</span>
-            {% else %}
-            <span style="color: red">Anulada</span>
-            {% endif %}
-          </td>
-          <td>
-            {% if reserva.estado %}
-            <a
-              href="{{ url_for('admin.ver_reservas', id=reserva.idreservas) }}"
-              onclick="return confirm('¿Seguro que deseas anular esta reserva?')"
-            >
-              ❌ Anular
-            </a>
-            {% else %}
-            <em>No disponible</em>
-            {% endif %}
-          </td>
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
-  </body>
-</html>
+{% block title %}Gestión de Reservas - Hotel Management{% endblock %}
+
+{% block content %}
+<div class="breadcrumb">
+    <a href="{{ url_for('admin.panel_admin') }}">
+        <i class="fas fa-home"></i> Panel Admin
+    </a>
+    <span> / Gestión de Reservas</span>
+</div>
+
+<h1 class="page-title">
+    <i class="fas fa-calendar-check"></i>
+    Gestión de Reservas
+</h1>
+
+<div class="card">
+    <div class="card-header">
+        <h2 class="card-title">Listado de Reservas</h2>
+    </div>
+
+    <div class="table-container">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th><i class="fas fa-hashtag"></i> ID</th>
+                    <th><i class="fas fa-user"></i> Cliente</th>
+                    <th><i class="fas fa-envelope"></i> Correo</th>
+                    <th><i class="fas fa-bed"></i> Habitación</th>
+                    <th><i class="fas fa-calendar-alt"></i> Check-in</th>
+                    <th><i class="fas fa-calendar-alt"></i> Check-out</th>
+                    <th><i class="fas fa-dollar-sign"></i> Abono</th>
+                    <th><i class="fas fa-info-circle"></i> Estado</th>
+                    <th><i class="fas fa-cogs"></i> Acción</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for reserva in reservas %}
+                <tr>
+                    <td>{{ reserva.idreservas }}</td>
+                    <td>{{ reserva.cliente.persona.nombre }}</td>
+                    <td>{{ reserva.cliente.persona.correo }}</td>
+                    <td>
+                        {% for detalle in reserva.detalle %}
+                            <span class="amenity-tag">Habitación #{{ detalle.habitacion.idhabitaciones }}</span>
+                        {% endfor %}
+                    </td>
+                    <td>{{ reserva.checkin }}</td>
+                    <td>{{ reserva.checkout }}</td>
+                    <td class="room-price">${{ "{:,.0f}".format(reserva.abono) }}</td>
+                    <td>
+                        {% if reserva.estado %}
+                            <span class="status-badge status-active">Activa</span>
+                        {% else %}
+                            <span class="status-badge status-inactive">Anulada</span>
+                        {% endif %}
+                    </td>
+                    <td class="actions">
+                        {% if reserva.estado %}
+                            <a href="{{ url_for('admin.ver_reservas', id=reserva.idreservas) }}" 
+                               class="btn btn-danger"
+                               onclick="return confirm('¿Seguro que deseas anular esta reserva?')">
+                                <i class="fas fa-times"></i>
+                                Anular
+                            </a>
+                        {% else %}
+                            <span class="text-muted">No disponible</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

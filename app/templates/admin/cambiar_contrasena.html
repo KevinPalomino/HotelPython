@@ -1,24 +1,59 @@
-<!DOCTYPE html>
-<html lang="es">
-  <head>
-    <meta charset="UTF-8" />
-    <title>Cambiar contraseña</title>
-  </head>
-  <body>
-    <h1>🔒 Cambiar contraseña</h1>
-    <p><strong>Usuario:</strong> {{ persona.nombre }} ({{ persona.correo }})</p>
+{% extends "base.html" %}
 
-    <form method="POST">
-      <label>Nueva contraseña:</label><br />
-      <input type="password" name="nueva_contrasena" required /><br /><br />
+{% block title %}Cambiar Contraseña - Hotel Management{% endblock %}
 
-      <label>Confirmar nueva contraseña:</label><br />
-      <input type="password" name="confirmar_contrasena" required /><br /><br />
+{% block content %}
+<div class="breadcrumb">
+    <a href="{{ url_for('admin.panel_admin') }}">
+        <i class="fas fa-home"></i> Panel Admin
+    </a>
+    <span> / </span>
+    <a href="{{ url_for('admin.ver_personal') }}">Personal</a>
+    <span> / Cambiar Contraseña</span>
+</div>
 
-      <button type="submit">Guardar cambios</button>
-    </form>
+<h1 class="page-title">
+    <i class="fas fa-key"></i>
+    Cambiar Contraseña
+</h1>
 
-    <br />
-    <a href="{{ url_for('admin.ver_personal') }}">← Volver a personal</a>
-  </body>
-</html>
+<div class="card">
+    <div class="card-header">
+        <h2 class="card-title">Cambio de Contraseña</h2>
+        <p><strong>Usuario:</strong> {{ persona.nombre }} ({{ persona.correo }})</p>
+    </div>
+
+    <div class="form-container">
+        <form method="POST">
+            <div class="form-group">
+                <label for="nueva_contrasena" class="form-label">
+                    <i class="fas fa-lock"></i>
+                    Nueva Contraseña
+                </label>
+                <input type="password" id="nueva_contrasena" name="nueva_contrasena" 
+                       class="form-input" required placeholder="Ingrese la nueva contraseña">
+            </div>
+
+            <div class="form-group">
+                <label for="confirmar_contrasena" class="form-label">
+                    <i class="fas fa-lock"></i>
+                    Confirmar Nueva Contraseña
+                </label>
+                <input type="password" id="confirmar_contrasena" name="confirmar_contrasena" 
+                       class="form-input" required placeholder="Confirme la nueva contraseña">
+            </div>
+
+            <div class="btn-group">
+                <button type="submit" class="btn btn-success">
+                    <i class="fas fa-save"></i>
+                    Guardar Cambios
+                </button>
+                <a href="{{ url_for('admin.ver_personal') }}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left"></i>
+                    Cancelar
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

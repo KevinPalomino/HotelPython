@@ -1,63 +1,102 @@
-<!DOCTYPE html>
-<html lang="es">
-  <head>
-    <meta charset="UTF-8" />
-    <title>Nueva Reserva</title>
-  </head>
-  <body>
-    <h1>➕ Registrar Nueva Reserva</h1>
+{% extends "base.html" %}
 
-    <form method="POST">
-      <!-- Cliente -->
-      <label>Cliente:</label><br />
-      <select name="cliente_cedula" required>
-        <option value="">-- Selecciona un cliente --</option>
-        {% for cliente in clientes %}
-        <option value="{{ cliente.cedula }}">
-          {{ cliente.nombre }} - {{ cliente.cedula }}
-        </option>
-        {% endfor %}</select
-      ><br /><br />
+{% block title %}Nueva Reserva - Hotel Management{% endblock %}
 
-      <!-- Habitación -->
-      <label>Habitación:</label><br />
-      <select name="habitacion" required>
-        <option value="">-- Selecciona una habitación --</option>
-        {% for hab in habitaciones %}
-        <option value="{{ hab.idhabitaciones }}">
-          N° {{ hab.numero }} - {{ hab.tipo }}
-        </option>
-        {% endfor %}</select
-      ><br /><br />
+{% block content %}
+<div class="breadcrumb">
+    <a href="{{ url_for('recepcion.panel_recepcionista') }}">
+        <i class="fas fa-concierge-bell"></i> Panel Recepción
+    </a>
+    <span> / Nueva Reserva</span>
+</div>
 
-      <!-- Check-in -->
-      <label>Fecha de ingreso (check-in):</label><br />
-      <input type="date" name="checkin" required /><br /><br />
+<h1 class="page-title">
+    <i class="fas fa-calendar-plus"></i>
+    Registrar Nueva Reserva
+</h1>
 
-      <!-- Check-out -->
-      <label>Fecha de salida (check-out):</label><br />
-      <input type="date" name="checkout" required /><br /><br />
+<div class="card">
+    <div class="card-header">
+        <h2 class="card-title">Información de la Reserva</h2>
+    </div>
 
-      <!-- Comentario -->
-      <label>Comentario (opcional):</label><br />
-      <textarea name="comentario" rows="3" cols="40"></textarea><br /><br />
+    <div class="form-container">
+        <form method="POST">
+            <div class="form-group">
+                <label for="cliente_cedula" class="form-label">
+                    <i class="fas fa-user"></i>
+                    Cliente
+                </label>
+                <select id="cliente_cedula" name="cliente_cedula" class="form-select" required>
+                    <option value="">-- Selecciona un cliente --</option>
+                    {% for cliente in clientes %}
+                        <option value="{{ cliente.cedula }}">
+                            {{ cliente.nombre }} - {{ cliente.cedula }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
 
-      <!-- Abono -->
-      <label>Abono inicial:</label><br />
-      <input
-        type="number"
-        name="abono"
-        value="0"
-        min="0"
-        required
-      /><br /><br />
+            <div class="form-group">
+                <label for="habitacion" class="form-label">
+                    <i class="fas fa-bed"></i>
+                    Habitación
+                </label>
+                <select id="habitacion" name="habitacion" class="form-select" required>
+                    <option value="">-- Selecciona una habitación --</option>
+                    {% for hab in habitaciones %}
+                        <option value="{{ hab.idhabitaciones }}">
+                            N° {{ hab.numero }} - {{ hab.tipo }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
 
-      <button type="submit">Guardar Reserva</button>
-    </form>
+            <div class="form-group">
+                <label for="checkin" class="form-label">
+                    <i class="fas fa-calendar-alt"></i>
+                    Fecha de Ingreso (Check-in)
+                </label>
+                <input type="date" id="checkin" name="checkin" class="form-input" required>
+            </div>
 
-    <br />
-    <a href="{{ url_for('recepcion.panel_recepcionista') }}"
-      >← Volver al panel</a
-    >
-  </body>
-</html>
+            <div class="form-group">
+                <label for="checkout" class="form-label">
+                    <i class="fas fa-calendar-alt"></i>
+                    Fecha de Salida (Check-out)
+                </label>
+                <input type="date" id="checkout" name="checkout" class="form-input" required>
+            </div>
+
+            <div class="form-group">
+                <label for="comentario" class="form-label">
+                    <i class="fas fa-comment"></i>
+                    Comentario (opcional)
+                </label>
+                <textarea id="comentario" name="comentario" class="form-textarea" 
+                          placeholder="Comentarios adicionales sobre la reserva"></textarea>
+            </div>
+
+            <div class="form-group">
+                <label for="abono" class="form-label">
+                    <i class="fas fa-dollar-sign"></i>
+                    Abono Inicial
+                </label>
+                <input type="number" id="abono" name="abono" class="form-input" 
+                       value="0" min="0" required placeholder="Monto del abono">
+            </div>
+
+            <div class="btn-group">
+                <button type="submit" class="btn btn-success">
+                    <i class="fas fa-save"></i>
+                    Guardar Reserva
+                </button>
+                <a href="{{ url_for('recepcion.panel_recepcionista') }}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left"></i>
+                    Cancelar
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

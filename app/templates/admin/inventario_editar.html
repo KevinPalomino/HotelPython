@@ -1,56 +1,86 @@
-<!DOCTYPE html>
-<html lang="es">
-  <head>
-    <meta charset="UTF-8" />
-    <title>Editar Producto</title>
-  </head>
-  <body>
-    <h1>✏️ Editar Producto</h1>
+{% extends "base.html" %}
 
-    <form method="POST">
-      <label>Nombre:</label><br />
-      <input
-        type="text"
-        name="nombre"
-        value="{{ producto.nombre }}"
-        required
-      /><br /><br />
+{% block title %}Editar Producto - Hotel Management{% endblock %}
 
-      <label>Categoría:</label><br />
-      <select name="categoria">
-        <option value="0" {% if not producto.categoria %}selected{% endif %}>
-          Bebida
-        </option>
-        <option value="1" {% if producto.categoria %}selected{% endif %}>
-          Alimento
-        </option></select
-      ><br /><br />
+{% block content %}
+<div class="breadcrumb">
+    <a href="{{ url_for('admin.panel_admin') }}">
+        <i class="fas fa-home"></i> Panel Admin
+    </a>
+    <span> / </span>
+    <a href="{{ url_for('admin.ver_inventario') }}">Inventario</a>
+    <span> / Editar Producto</span>
+</div>
 
-      <label>Cantidad:</label><br />
-      <input
-        type="number"
-        name="cantidad"
-        value="{{ producto.cantidad }}"
-        required
-      /><br /><br />
+<h1 class="page-title">
+    <i class="fas fa-edit"></i>
+    Editar Producto
+</h1>
 
-      <label>Precio:</label><br />
-      <input
-        type="number"
-        name="precio"
-        value="{{ producto.precio }}"
-        required
-      /><br /><br />
+<div class="card">
+    <div class="card-header">
+        <h2 class="card-title">Información del Producto</h2>
+    </div>
 
-      <label>Descripción:</label><br />
-      <textarea name="descripcion" rows="4" cols="40">
-{{ producto.descripcion }}</textarea
-      ><br /><br />
+    <div class="form-container">
+        <form method="POST">
+            <div class="form-group">
+                <label for="nombre" class="form-label">
+                    <i class="fas fa-box"></i>
+                    Nombre del Producto
+                </label>
+                <input type="text" id="nombre" name="nombre" class="form-input" 
+                       value="{{ producto.nombre }}" required>
+            </div>
 
-      <button type="submit">Guardar cambios</button>
-    </form>
+            <div class="form-group">
+                <label for="categoria" class="form-label">
+                    <i class="fas fa-tag"></i>
+                    Categoría
+                </label>
+                <select id="categoria" name="categoria" class="form-select">
+                    <option value="0" {% if not producto.categoria %}selected{% endif %}>Bebida</option>
+                    <option value="1" {% if producto.categoria %}selected{% endif %}>Alimento</option>
+                </select>
+            </div>
 
-    <br />
-    <a href="{{ url_for('admin.ver_inventario') }}">← Volver al listado</a>
-  </body>
-</html>
+            <div class="form-group">
+                <label for="cantidad" class="form-label">
+                    <i class="fas fa-sort-numeric-up"></i>
+                    Cantidad
+                </label>
+                <input type="number" id="cantidad" name="cantidad" class="form-input" 
+                       value="{{ producto.cantidad }}" min="0" required>
+            </div>
+
+            <div class="form-group">
+                <label for="precio" class="form-label">
+                    <i class="fas fa-dollar-sign"></i>
+                    Precio
+                </label>
+                <input type="number" id="precio" name="precio" class="form-input" 
+                       value="{{ producto.precio }}" min="0" step="100" required>
+            </div>
+
+            <div class="form-group">
+                <label for="descripcion" class="form-label">
+                    <i class="fas fa-info-circle"></i>
+                    Descripción
+                </label>
+                <textarea id="descripcion" name="descripcion" class="form-textarea">{{ producto.descripcion }}</textarea>
+            </div>
+
+            <div class="btn-group">
+                <button type="submit" class="btn btn-success">
+                    <i class="fas fa-save"></i>
+                    Guardar Cambios
+                </button>
+                <a href="{{ url_for('admin.ver_inventario') }}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left"></i>
+                    Cancelar
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

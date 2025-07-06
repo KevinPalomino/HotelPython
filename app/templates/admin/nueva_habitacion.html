@@ -1,75 +1,191 @@
-<!-- templates/admin/nueva_habitacion.html -->
-<!DOCTYPE html>
-<html lang="es">
-  <head>
-    <meta charset="UTF-8" />
-    <title>Nueva Habitación</title>
-  </head>
-  <body>
-    <h1>Registrar nueva habitación</h1>
+{% extends "base.html" %}
 
-    <form method="POST" enctype="multipart/form-data">
-      <label>Tipo:</label><br />
-      <input type="text" name="tipo" required /><br /><br />
+{% block title %}Nueva Habitación - Hotel Management{% endblock %}
 
-      <label>Capacidad:</label><br />
-      <input type="number" name="capacidad" required /><br /><br />
+{% block content %}
+<div class="breadcrumb">
+    <a href="{{ url_for('admin.panel_admin') }}">
+        <i class="fas fa-home"></i> Panel Admin
+    </a>
+    <span> / </span>
+    <a href="{{ url_for('admin.listar_habitaciones') }}">Habitaciones</a>
+    <span> / </span>
+    <span>Nueva Habitación</span>
+</div>
 
-      <label>Precio:</label><br />
-      <input type="number" name="precio" required /><br /><br />
+<h1 class="page-title">
+    <i class="fas fa-plus-circle"></i>
+    Registrar Nueva Habitación
+</h1>
 
-      <label>Categoría:</label><br />
-      <select
-        name="categoria"
-        id="categoria"
-        onchange="toggleNuevaCategoria(this.value)"
-      >
-        {% for cat in categorias %}
-        <option value="{{ cat.idcategorias }}">{{ cat.nombre }}</option>
-        {% endfor %}
-        <option value="nueva">-- Crear nueva categoría --</option></select
-      ><br /><br />
+<div class="form-container">
+    <div class="card">
+        <div class="card-header">
+            <h2 class="card-title">Información de la Habitación</h2>
+        </div>
+        <form method="POST" enctype="multipart/form-data">
+            <div class="form-group">
+                <label for="tipo" class="form-label">
+                    <i class="fas fa-door-open"></i>
+                    Tipo de Habitación
+                </label>
+                <input type="text" name="tipo" id="tipo" class="form-input" required 
+                       placeholder="Ej: Suite Ejecutiva, Habitación Estándar">
+            </div>
 
-      <div id="nueva_categoria_campos" style="display: none">
-        <label>Nombre nueva categoría:</label><br />
-        <input type="text" name="nueva_categoria_nombre" /><br /><br />
+            <div class="form-group">
+                <label for="capacidad" class="form-label">
+                    <i class="fas fa-users"></i>
+                    Capacidad
+                </label>
+                <input type="number" name="capacidad" id="capacidad" class="form-input" required 
+                       min="1" max="10" placeholder="Número de personas">
+            </div>
 
-        <label>Descripción nueva categoría:</label><br />
-        <input type="text" name="nueva_categoria_descripcion" /><br /><br />
-      </div>
+            <div class="form-group">
+                <label for="precio" class="form-label">
+                    <i class="fas fa-dollar-sign"></i>
+                    Precio por Noche
+                </label>
+                <input type="number" name="precio" id="precio" class="form-input" required 
+                       min="0" step="1000" placeholder="Precio en pesos">
+            </div>
 
-      <label>Amenidades:</label><br />
-      <input type="checkbox" name="wifi" /> Wifi<br />
-      <input type="checkbox" name="aire_acondicionado" /> A/A<br />
-      <input type="checkbox" name="tv" /> TV<br />
-      <input type="checkbox" name="tina" /> Tina<br />
-      <input type="checkbox" name="ventilador" /> Ventilador<br />
-      <input type="checkbox" name="bar" /> Bar<br />
-      <input type="checkbox" name="aseo" /> Aseo<br />
-      <input type="checkbox" name="caja_fuerte" /> Caja Fuerte<br /><br />
+            <div class="form-group">
+                <label for="categoria" class="form-label">
+                    <i class="fas fa-tag"></i>
+                    Categoría
+                </label>
+                <select name="categoria" id="categoria" class="form-select" 
+                        onchange="toggleNuevaCategoria(this.value)">
+                    <option value="">Seleccione una categoría</option>
+                    {% for cat in categorias %}
+                    <option value="{{ cat.idcategorias }}">{{ cat.nombre }}</option>
+                    {% endfor %}
+                    <option value="nueva">-- Crear nueva categoría --</option>
+                </select>
+            </div>
 
-      <label>Camas:</label><br />
-      {% for cama in camas %}
-      <input type="checkbox" name="camas" value="{{ cama.idcamas }}" /> {{
-      cama.nombre }}<br />
-      {% endfor %}
-      <br />
+            <div id="nueva_categoria_campos" style="display: none;">
+                <div class="form-group">
+                    <label for="nueva_categoria_nombre" class="form-label">
+                        <i class="fas fa-plus"></i>
+                        Nombre Nueva Categoría
+                    </label>
+                    <input type="text" name="nueva_categoria_nombre" id="nueva_categoria_nombre" 
+                           class="form-input" placeholder="Nombre de la categoría">
+                </div>
 
-      <label>Fotos:</label><br />
-      <input type="file" name="fotos" multiple /><br /><br />
+                <div class="form-group">
+                    <label for="nueva_categoria_descripcion" class="form-label">
+                        <i class="fas fa-align-left"></i>
+                        Descripción Nueva Categoría
+                    </label>
+                    <input type="text" name="nueva_categoria_descripcion" id="nueva_categoria_descripcion" 
+                           class="form-input" placeholder="Descripción de la categoría">
+                </div>
+            </div>
 
-      <button type="submit">Registrar</button>
-    </form>
+            <div class="form-group">
+                <label class="form-label">
+                    <i class="fas fa-concierge-bell"></i>
+                    Amenidades
+                </label>
+                <div class="checkbox-group">
+                    <div class="checkbox-item">
+                        <input type="checkbox" name="wifi" id="wifi">
+                        <label for="wifi"><i class="fas fa-wifi"></i> WiFi</label>
+                    </div>
+                    <div class="checkbox-item">
+                        <input type="checkbox" name="aire_acondicionado" id="aire_acondicionado">
+                        <label for="aire_acondicionado"><i class="fas fa-snowflake"></i> Aire Acondicionado</label>
+                    </div>
+                    <div class="checkbox-item">
+                        <input type="checkbox" name="tv" id="tv">
+                        <label for="tv"><i class="fas fa-tv"></i> Televisión</label>
+                    </div>
+                    <div class="checkbox-item">
+                        <input type="checkbox" name="tina" id="tina">
+                        <label for="tina"><i class="fas fa-bath"></i> Tina</label>
+                    </div>
+                    <div class="checkbox-item">
+                        <input type="checkbox" name="ventilador" id="ventilador">
+                        <label for="ventilador"><i class="fas fa-fan"></i> Ventilador</label>
+                    </div>
+                    <div class="checkbox-item">
+                        <input type="checkbox" name="bar" id="bar">
+                        <label for="bar"><i class="fas fa-cocktail"></i> Mini Bar</label>
+                    </div>
+                    <div class="checkbox-item">
+                        <input type="checkbox" name="aseo" id="aseo">
+                        <label for="aseo"><i class="fas fa-toilet-paper"></i> Kit de Aseo</label>
+                    </div>
+                    <div class="checkbox-item">
+                        <input type="checkbox" name="caja_fuerte" id="caja_fuerte">
+                        <label for="caja_fuerte"><i class="fas fa-lock"></i> Caja Fuerte</label>
+                    </div>
+                </div>
+            </div>
 
-    <script>
-      function toggleNuevaCategoria(valor) {
-        const div = document.getElementById("nueva_categoria_campos");
-        if (valor === "nueva") {
-          div.style.display = "block";
-        } else {
-          div.style.display = "none";
-        }
-      }
-    </script>
-  </body>
-</html>
+            <div class="form-group">
+                <label class="form-label">
+                    <i class="fas fa-bed"></i>
+                    Tipos de Camas
+                </label>
+                <div class="checkbox-group">
+                    {% for cama in camas %}
+                    <div class="checkbox-item">
+                        <input type="checkbox" name="camas" value="{{ cama.idcamas }}" id="cama_{{ cama.idcamas }}">
+                        <label for="cama_{{ cama.idcamas }}">{{ cama.nombre }}</label>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div class="form-group">
+                <div class="checkbox-item">
+                    <input type="checkbox" id="estado" name="estado" checked>
+                    <label for="estado" class="form-label">
+                        <i class="fas fa-toggle-on"></i>
+                        Habitación Disponible
+                    </label>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="fotos" class="form-label">
+                    <i class="fas fa-camera"></i>
+                    Fotos de la Habitación
+                </label>
+                <input type="file" name="fotos" id="fotos" class="form-input" multiple accept="image/*">
+                <small style="color: var(--text-light);">Puedes seleccionar múltiples imágenes</small>
+            </div>
+
+            <div class="btn-group">
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-save"></i>
+                    Registrar Habitación
+                </button>
+                <a href="{{ url_for('admin.listar_habitaciones') }}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left"></i>
+                    Cancelar
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function toggleNuevaCategoria(valor) {
+    const div = document.getElementById('nueva_categoria_campos');
+    if (valor === 'nueva') {
+        div.style.display = 'block';
+        div.classList.add('slide-in');
+    } else {
+        div.style.display = 'none';
+    }
+}
+</script>
+{% endblock %}

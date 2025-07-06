@@ -1,40 +1,100 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-  <meta charset="UTF-8">
-  <title>Editar Empleado</title>
-</head>
-<body>
-  <h1>✏️ Editar Empleado</h1>
-  <form method="POST">
-    <label>Cédula:</label><br>
-    <input type="text" name="cedula" value="{{ persona.cedula }}" readonly><br><br>
+{% extends "base.html" %}
 
-    <label>Nombre:</label><br>
-    <input type="text" name="nombre" value="{{ persona.nombre }}" required><br><br>
+{% block title %}Editar Empleado - Hotel Management{% endblock %}
 
-    <label>Correo:</label><br>
-    <input type="email" name="correo" value="{{ persona.correo }}" required><br><br>
+{% block content %}
+<div class="breadcrumb">
+    <a href="{{ url_for('admin.panel_admin') }}">
+        <i class="fas fa-home"></i> Panel Admin
+    </a>
+    <span> / </span>
+    <a href="{{ url_for('admin.ver_personal') }}">Personal</a>
+    <span> / Editar Empleado</span>
+</div>
 
-    <label>Teléfono:</label><br>
-    <input type="text" name="telefono" value="{{ persona.telefono }}"><br><br>
+<h1 class="page-title">
+    <i class="fas fa-user-edit"></i>
+    Editar Empleado
+</h1>
 
-    <label>Dirección:</label><br>
-    <input type="text" name="direccion" value="{{ persona.direccion }}"><br><br>
+<div class="card">
+    <div class="card-header">
+        <h2 class="card-title">Información del Empleado</h2>
+    </div>
 
-    <label>Rol:</label><br>
-    <select name="rol">
-      {% for r in roles %}
-        <option value="{{ r.idroles }}" {% if r.idroles == persona.roles_idroles %}selected{% endif %}>
-          {{ r.nombre }}
-        </option>
-      {% endfor %}
-    </select><br><br>
+    <div class="form-container">
+        <form method="POST">
+            <div class="form-group">
+                <label for="cedula" class="form-label">
+                    <i class="fas fa-id-card"></i>
+                    Cédula
+                </label>
+                <input type="text" id="cedula" name="cedula" class="form-input" 
+                       value="{{ persona.cedula }}" readonly style="background-color: var(--light-bg);">
+            </div>
 
-    <button type="submit">Guardar cambios</button>
-  </form>
+            <div class="form-group">
+                <label for="nombre" class="form-label">
+                    <i class="fas fa-user"></i>
+                    Nombre Completo
+                </label>
+                <input type="text" id="nombre" name="nombre" class="form-input" 
+                       value="{{ persona.nombre }}" required>
+            </div>
 
-  <br>
-  <a href="{{ url_for('admin.ver_personal') }}">← Volver al listado</a>
-</body>
-</html>
+            <div class="form-group">
+                <label for="correo" class="form-label">
+                    <i class="fas fa-envelope"></i>
+                    Correo Electrónico
+                </label>
+                <input type="email" id="correo" name="correo" class="form-input" 
+                       value="{{ persona.correo }}" required>
+            </div>
+
+            <div class="form-group">
+                <label for="telefono" class="form-label">
+                    <i class="fas fa-phone"></i>
+                    Teléfono
+                </label>
+                <input type="text" id="telefono" name="telefono" class="form-input" 
+                       value="{{ persona.telefono }}">
+            </div>
+
+            <div class="form-group">
+                <label for="direccion" class="form-label">
+                    <i class="fas fa-map-marker-alt"></i>
+                    Dirección
+                </label>
+                <input type="text" id="direccion" name="direccion" class="form-input" 
+                       value="{{ persona.direccion }}">
+            </div>
+
+            <div class="form-group">
+                <label for="rol" class="form-label">
+                    <i class="fas fa-user-tag"></i>
+                    Rol
+                </label>
+                <select id="rol" name="rol" class="form-select">
+                    {% for r in roles %}
+                        <option value="{{ r.idroles }}" 
+                            {% if r.idroles == persona.roles_idroles %}selected{% endif %}>
+                            {{ r.nombre }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="btn-group">
+                <button type="submit" class="btn btn-success">
+                    <i class="fas fa-save"></i>
+                    Guardar Cambios
+                </button>
+                <a href="{{ url_for('admin.ver_personal') }}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left"></i>
+                    Cancelar
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

@@ -1,33 +1,44 @@
-<!DOCTYPE html>
-<html lang="es">
-  <head>
-    <meta charset="UTF-8" />
-    <title>Panel del Administrador</title>
-  </head>
-  <body>
-    <h1>Bienvenido al Panel del Administrador</h1>
-    <p>Hola {{ current_user.nombre }}</p>
+{% extends "base.html" %}
 
-    <nav>
-      <ul>
-        <li>
-          <a href="{{ url_for('admin.nueva_habitacion') }}">
-            ➕ Registrar nueva habitación
-          </a>
-        </li>
-        <li>
-          <a href="{{ url_for('admin.listar_habitaciones') }}"
-            >🛏️ Ver habitaciones registradas</a
-          >
-        </li>
+{% block title %}Panel de Administración - Hotel Management{% endblock %}
 
-        <li><a href="{{ url_for('admin.ver_inventario') }}">📦 Gestión de inventario </a></li>
-        <li><a href="{{ url_for('admin.ver_personal') }}">🧑‍💼 Gestión de personal</a></li>
-        <li><a href="{{ url_for('admin.ver_reservas') }}"">📋 Ver todas las reservas</a></li>
-        <li>
-          <a href="{{ url_for('auth.logout') }}">🔒 Cerrar sesión</a>
-        </li>
-      </ul>
-    </nav>
-  </body>
-</html>
+{% block content %}
+<h1 class="page-title">
+    <i class="fas fa-cogs"></i>
+    Panel de Administración
+</h1>
+
+<div class="nav-grid">
+    <a href="{{ url_for('admin.listar_habitaciones') }}" class="nav-item">
+        <div class="nav-icon">
+            <i class="fas fa-bed"></i>
+        </div>
+        <div class="nav-title">Gestión de Habitaciones</div>
+        <div class="nav-description">Administrar habitaciones, tipos y disponibilidad</div>
+    </a>
+
+    <a href="{{ url_for('admin.ver_personal') }}" class="nav-item">
+        <div class="nav-icon">
+            <i class="fas fa-users"></i>
+        </div>
+        <div class="nav-title">Gestión de Personal</div>
+        <div class="nav-description">Administrar empleados y roles del sistema</div>
+    </a>
+
+    <a href="{{ url_for('admin.ver_reservas') }}" class="nav-item">
+        <div class="nav-icon">
+            <i class="fas fa-calendar-check"></i>
+        </div>
+        <div class="nav-title">Gestión de Reservas</div>
+        <div class="nav-description">Ver y administrar todas las reservas</div>
+    </a>
+
+    <a href="{{ url_for('admin.ver_inventario') }}" class="nav-item">
+        <div class="nav-icon">
+            <i class="fas fa-boxes"></i>
+        </div>
+        <div class="nav-title">Inventario</div>
+        <div class="nav-description">Gestionar productos y suministros del hotel</div>
+    </a>
+</div>
+{% endblock %}

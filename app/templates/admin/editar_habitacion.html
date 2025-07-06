@@ -1,48 +1,110 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8" />
-    <title>Editar Habitación</title>
-</head>
-<body>
-    <h1>Editar Habitación #{{ habitacion.idhabitaciones }}</h1>
+{% extends "base.html" %}
 
-    <form method="POST">
-        <label for="tipo">Tipo:</label><br>
-        <input type="text" name="tipo" value="{{ habitacion.tipo }}" required><br>
+{% block title %}Editar Habitación - Hotel Management{% endblock %}
 
-        <label for="capacidad">Capacidad:</label><br>
-        <input type="number" name="capacidad" value="{{ habitacion.capacidad }}" required><br>
+{% block content %}
+<div class="breadcrumb">
+    <a href="{{ url_for('admin.panel_admin') }}">
+        <i class="fas fa-home"></i> Panel Admin
+    </a>
+    <span> / </span>
+    <a href="{{ url_for('admin.listar_habitaciones') }}">Habitaciones</a>
+    <span> / Editar Habitación #{{ habitacion.idhabitaciones }}</span>
+</div>
 
-        <label for="precio">Precio:</label><br>
-        <input type="number" name="precio" value="{{ habitacion.precio }}" required><br>
+<h1 class="page-title">
+    <i class="fas fa-edit"></i>
+    Editar Habitación #{{ habitacion.idhabitaciones }}
+</h1>
 
-        <label for="categoria">Categoría:</label><br>
-        <select name="categoria" required>
-            {% for cat in categorias %}
-                <option value="{{ cat.idcategorias }}"
-                    {% if cat.idcategorias == habitacion.categorias_idcategorias %}selected{% endif %}>
-                    {{ cat.nombre }}
-                </option>
-            {% endfor %}
-        </select><br>
+<div class="card">
+    <div class="card-header">
+        <h2 class="card-title">Información de la Habitación</h2>
+    </div>
 
-        <label for="camas">Camas:</label><br>
-        {% for cama in camas %}
-            <input type="checkbox" name="camas" value="{{ cama.idcamas }}"
-                {% if cama.idcamas in camas_relacionadas %}checked{% endif %}>
-            {{ cama.nombre }}<br>
-        {% endfor %}
+    <div class="form-container">
+        <form method="POST">
+            <div class="form-group">
+                <label for="tipo" class="form-label">
+                    <i class="fas fa-door-open"></i>
+                    Tipo de Habitación
+                </label>
+                <input type="text" id="tipo" name="tipo" class="form-input" 
+                       value="{{ habitacion.tipo }}" required>
+            </div>
 
-        <label>
-            <input type="checkbox" name="estado" {% if habitacion.estado %}checked{% endif %}>
-            Disponible
-        </label><br><br>
+            <div class="form-group">
+                <label for="capacidad" class="form-label">
+                    <i class="fas fa-users"></i>
+                    Capacidad
+                </label>
+                <input type="number" id="capacidad" name="capacidad" class="form-input" 
+                       value="{{ habitacion.capacidad }}" min="1" max="10" required>
+            </div>
 
-        <button type="submit">Guardar cambios</button>
-    </form>
+            <div class="form-group">
+                <label for="precio" class="form-label">
+                    <i class="fas fa-dollar-sign"></i>
+                    Precio por Noche
+                </label>
+                <input type="number" id="precio" name="precio" class="form-input" 
+                       value="{{ habitacion.precio }}" min="0" step="1000" required>
+            </div>
 
-    <br>
-    <a href="{{ url_for('admin.listar_habitaciones') }}">← Volver al listado</a>
-</body>
-</html>
+            <div class="form-group">
+                <label for="categoria" class="form-label">
+                    <i class="fas fa-tag"></i>
+                    Categoría
+                </label>
+                <select id="categoria" name="categoria" class="form-select" required>
+                    {% for cat in categorias %}
+                        <option value="{{ cat.idcategorias }}"
+                            {% if cat.idcategorias == habitacion.categorias_idcategorias %}selected{% endif %}>
+                            {{ cat.nombre }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">
+                    <i class="fas fa-bed"></i>
+                    Tipos de Camas
+                </label>
+                <div class="checkbox-group">
+                    {% for cama in camas %}
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="cama_{{ cama.idcamas }}" 
+                                   name="camas" value="{{ cama.idcamas }}"
+                                   {% if cama.idcamas in camas_relacionadas %}checked{% endif %}>
+                            <label for="cama_{{ cama.idcamas }}">{{ cama.nombre }}</label>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div class="form-group">
+                <div class="checkbox-item">
+                    <input type="checkbox" id="estado" name="estado" 
+                           {% if habitacion.estado %}checked{% endif %}>
+                    <label for="estado" class="form-label">
+                        <i class="fas fa-toggle-on"></i>
+                        Habitación Disponible
+                    </label>
+                </div>
+            </div>
+
+            <div class="btn-group">
+                <button type="submit" class="btn btn-success">
+                    <i class="fas fa-save"></i>
+                    Guardar Cambios
+                </button>
+                <a href="{{ url_for('admin.listar_habitaciones') }}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left"></i>
+                    Cancelar
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
