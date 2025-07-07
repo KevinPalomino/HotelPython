@@ -132,3 +132,20 @@ def nueva_reserva():
     return render_template('recepcion/reserva_nueva.html',
                            habitaciones=habitaciones_disponibles,
                            clientes=clientes)
+
+
+@recepcion_bp.route('/clientes_personal')
+@login_required
+def clientes_personal():
+    if current_user.rol.nombre != 'Recepcionista':
+        flash('Acceso no autorizado', 'danger')
+        return redirect(url_for('auth.login'))
+
+    from app.models.models import Persona, Rol
+
+    # Filtra solo CLIENTES y RECEPCIONISTAS
+    roles_permitidos = ['Recepcionista', 'Cliente']
+    personas = Persona.query.join(Rol).filter(
+        Rol.nombre.in_(roles_permitidos)).order_by(Rol.nombre).all()
+
+    return render_template('recepcion/clientes_personal.html', personas=personas)

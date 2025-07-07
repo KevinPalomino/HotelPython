@@ -37,5 +37,16 @@ Management{% endblock %} {% block content %}
     <div class="nav-title">Check-Out</div>
     <div class="nav-description">Procesar salidas de huéspedes</div>
   </a>
+
+  <!-- ✅ Nuevo módulo -->
+  <a href="{{ url_for('recepcion.clientes_personal') }}" class="nav-item">
+    <div class="nav-icon">
+      <i class="fas fa-users"></i>
+    </div>
+    <div class="nav-title">Clientes/Personal</div>
+    <div class="nav-description">
+      Consultar información de clientes y recepcionistas
+    </div>
+  </a>
 </div>
 {% endblock %}

@@ -1,0 +1,47 @@
+{% extends "base.html" %} {% block title %}Clientes y Personal - Hotel
+Management{% endblock %} {% block content %}
+<div class="breadcrumb">
+  <a href="{{ url_for('recepcion.panel_recepcionista') }}">
+    <i class="fas fa-home"></i> Panel Recepción
+  </a>
+  <span> / Clientes y Personal</span>
+</div>
+
+<h1 class="page-title">
+  <i class="fas fa-users"></i>
+  Clientes y Personal
+</h1>
+
+<div class="card">
+  <div class="card-header">
+    <h2 class="card-title">Listado</h2>
+  </div>
+
+  <div class="table-container">
+    <table class="table">
+      <thead>
+        <tr>
+          <th><i class="fas fa-id-card"></i> Cédula</th>
+          <th><i class="fas fa-user"></i> Nombre</th>
+          <th><i class="fas fa-envelope"></i> Correo</th>
+          <th><i class="fas fa-phone"></i> Teléfono</th>
+          <th><i class="fas fa-map-marker-alt"></i> Dirección</th>
+          <th><i class="fas fa-user-tag"></i> Rol</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for persona in personas %}
+        <tr>
+          <td>{{ persona.cedula }}</td>
+          <td>{{ persona.nombre }}</td>
+          <td>{{ persona.correo }}</td>
+          <td>{{ persona.telefono }}</td>
+          <td>{{ persona.direccion }}</td>
+          <td><span class="status-badge">{{ persona.rol.nombre }}</span></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}
