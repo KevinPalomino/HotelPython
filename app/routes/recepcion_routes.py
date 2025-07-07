@@ -4,7 +4,7 @@ from flask_login import login_required, current_user
 from datetime import date
 from app import db
 
-from app.models.models import Habitacion, Reserva
+from app.models.models import Habitacion, Persona, Reserva, Rol
 
 
 recepcion_bp = Blueprint('recepcion', __name__)
@@ -134,18 +134,25 @@ def nueva_reserva():
                            clientes=clientes)
 
 
-@recepcion_bp.route('/clientes_personal')
+@recepcion_bp.route('/recepcion/clientes_personal')
 @login_required
 def clientes_personal():
     if current_user.rol.nombre != 'Recepcionista':
         flash('Acceso no autorizado', 'danger')
         return redirect(url_for('auth.login'))
 
-    from app.models.models import Persona, Rol
+    # Obtener filtro si existe
+    filtro = request.args.get('filtro', '').strip().lower()
 
-    # Filtra solo CLIENTES y RECEPCIONISTAS
-    roles_permitidos = ['Recepcionista', 'Cliente']
     personas = Persona.query.join(Rol).filter(
-        Rol.nombre.in_(roles_permitidos)).order_by(Rol.nombre).all()
+        Rol.nombre.in_(['Cliente', 'Recepcionista'])).all()
 
-    return render_template('recepcion/clientes_personal.html', personas=personas)
+    if filtro:
+        personas = [
+            p for p in personas if
+            filtro in str(p.cedula).lower() or
+            filtro in p.nombre.lower() or
+            filtro in p.rol.nombre.lower()
+        ]
+
+    return render_template('recepcion/clientes_personal.html', personas=personas, filtro=filtro)
