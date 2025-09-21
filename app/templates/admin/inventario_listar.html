@@ -1,0 +1,113 @@
+{% extends "base.html" %}
+
+{% block title %}Inventario - Hotel Management{% endblock %}
+
+{% block content %}
+<div class="breadcrumb">
+    <a href="{{ url_for('admin.panel_admin') }}">
+        <i class="fas fa-home"></i> Panel Admin
+    </a>
+    <span> / Inventario</span>
+</div>
+
+<h1 class="page-title">
+    <i class="fas fa-boxes"></i>
+    Gestión de Inventario
+</h1>
+
+<div class="card">
+    <div class="card-header">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2 class="card-title">Productos del Hotel</h2>
+            <a href="{{ url_for('admin.nuevo_producto') }}" class="btn btn-success">
+                <i class="fas fa-plus"></i>
+                Agregar Producto
+            </a>
+        </div>
+    </div>
+
+    <!-- 🔍 Campo de búsqueda -->
+    <div style="padding: 1rem;">
+        <input 
+            type="text" 
+            id="filtroInventario" 
+            class="form-control" 
+            placeholder="Buscar por ID, nombre, categoría, precio o descripción..."
+            style="width: 100%; padding: 0.5rem; border: 1px solid #ccc; border-radius: 5px;"
+        >
+    </div>
+
+    <div class="table-container">
+        <table class="table" id="tablaInventario">
+            <thead>
+                <tr>
+                    <th><i class="fas fa-hashtag"></i> ID</th>
+                    <th><i class="fas fa-box"></i> Nombre</th>
+                    <th><i class="fas fa-tag"></i> Categoría</th>
+                    <th><i class="fas fa-sort-numeric-up"></i> Cantidad</th>
+                    <th><i class="fas fa-dollar-sign"></i> Precio</th>
+                    <th><i class="fas fa-info-circle"></i> Descripción</th>
+                    <th><i class="fas fa-cogs"></i> Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for p in productos %}
+                <tr>
+                    <td>{{ p.idinventario }}</td>
+                    <td>{{ p.nombre }}</td>
+                    <td>
+                        <span class="status-badge {{ 'status-active' if p.categoria else 'status-pending' }}">
+                            {{ "Alimento" if p.categoria else "Bebida" }}
+                        </span>
+                    </td>
+                    <td>{{ p.cantidad }}</td>
+                    <td class="room-price">${{ "{:,.0f}".format(p.precio) }}</td>
+                    <td>{{ p.descripcion }}</td>
+                    <td class="actions">
+                        <a href="{{ url_for('admin.editar_producto', id=p.idinventario) }}" 
+                           class="btn btn-warning" style="margin-right: 0.5rem;">
+                            <i class="fas fa-edit"></i>
+                        </a>
+                        <a href="{{ url_for('admin.eliminar_producto', id=p.idinventario) }}" 
+                           class="btn btn-danger"
+                           onclick="return confirm('¿Estás seguro de eliminar este producto?')">
+                            <i class="fas fa-trash"></i>
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- 📜 Script del filtro -->
+<script>
+document.getElementById("filtroInventario").addEventListener("keyup", function() {
+    let filtro = this.value.toLowerCase();
+    let filas = document.querySelectorAll("#tablaInventario tbody tr");
+
+    filas.forEach(function(fila) {
+        let id = fila.cells[0].textContent.toLowerCase();
+        let nombre = fila.cells[1].textContent.toLowerCase();
+        let categoria = fila.cells[2].textContent.toLowerCase();
+        let cantidad = fila.cells[3].textContent.toLowerCase();
+        let precio = fila.cells[4].textContent.toLowerCase();
+        let descripcion = fila.cells[5].textContent.toLowerCase();
+
+        if (
+            id.includes(filtro) || 
+            nombre.includes(filtro) || 
+            categoria.includes(filtro) || 
+            cantidad.includes(filtro) || 
+            precio.includes(filtro) || 
+            descripcion.includes(filtro)
+        ) {
+            fila.style.display = "";
+        } else {
+            fila.style.display = "none";
+        }
+    });
+});
+</script>
+{% endblock %}

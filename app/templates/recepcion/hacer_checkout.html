@@ -1,0 +1,113 @@
+{% extends "base.html" %}
+
+{% block title %}Confirmar Check-out - Hotel Management{% endblock %}
+
+{% block content %}
+
+<div class="breadcrumb">
+    <a href="{{ url_for('recepcion.panel_recepcionista') }}">
+        <i class="fas fa-concierge-bell"></i> Panel Recepción
+    </a>
+    <span> / </span>
+    <a href="{{ url_for('recepcion.ver_reservas_checkout') }}">
+        <i class="fas fa-sign-out-alt"></i> Check-out
+    </a>
+    <span> / Confirmar Check-out</span>
+</div>
+
+<h1 class="page-title">
+    <i class="fas fa-sign-out-alt"></i>
+    Confirmar Check-Out
+</h1>
+
+<div class="card">
+    <div class="card-header">
+        <h2 class="card-title">Información de la Reserva</h2>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-6">
+                <h5><i class="fas fa-user"></i> Información del Cliente</h5>
+                <p><strong>Nombre:</strong> {{ cliente.nombre }}</p>
+                <p><strong>Cédula:</strong> {{ cliente.cedula }}</p>
+                <p><strong>Teléfono:</strong> {{ cliente.telefono }}</p>
+                <p><strong>Email:</strong> {{ cliente.correo }}</p>
+            </div>
+            <div class="col-md-6">
+                <h5><i class="fas fa-bed"></i> Información de la Habitación</h5>
+                <p><strong>Habitación:</strong> {{ habitacion.idhabitaciones }}</p>
+                <p><strong>Tipo:</strong> {{ habitacion.tipo }}</p>
+                <p><strong>Estado Actual:</strong> {{ habitacion.estado }}</p>
+            </div>
+        </div>
+        
+        <hr>
+        
+        <div class="row">
+            <div class="col-md-12">
+                <h5><i class="fas fa-calendar-alt"></i> Resumen de Estadía</h5>
+                <div class="row">
+                    <div class="col-md-3">
+                        <p><strong>Fecha de Entrada:</strong><br>{{ reserva.checkin.strftime('%Y-%m-%d') }}</p>
+                    </div>
+                    <div class="col-md-3">
+                        <p><strong>Fecha de Salida:</strong><br>{{ reserva.checkout.strftime('%Y-%m-%d') }}</p>
+                    </div>
+                    <div class="col-md-3">
+                        <p><strong>Días de Estadía:</strong><br>{{ (reserva.checkout - reserva.checkin).days }} día(s)</p>
+                    </div>
+                    <div class="col-md-3">
+                        <p><strong>Abono Pagado:</strong><br>${{ "{:,.0f}".format(reserva.abono) }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <hr>
+        
+        <div class="alert alert-info">
+            <h5><i class="fas fa-info-circle"></i> Información del Check-out</h5>
+            <p><strong>Al confirmar el check-out:</strong></p>
+            <ul class="mb-0">
+                <li>La reserva será marcada como <strong>Finalizada</strong></li>
+                <li>La habitación {{ habitacion.idhabitaciones }} quedará <strong>Disponible</strong> para nuevas reservas</li>
+                <li>Se completará el proceso de salida del huésped</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<div class="card mt-4">
+    <div class="card-body text-center">
+        <h5 class="mb-4">¿Confirma el check-out para este huésped?</h5>
+        
+        <form method="POST" style="display: inline-block;">
+            <button type="submit" class="btn btn-warning btn-lg mr-3">
+                <i class="fas fa-check"></i> Confirmar Check-out
+            </button>
+        </form>
+        
+        <a href="{{ url_for('recepcion.ver_reservas_checkout') }}" class="btn btn-secondary btn-lg">
+            <i class="fas fa-times"></i> Cancelar
+        </a>
+    </div>
+</div>
+
+<style>
+.alert-info {
+    background-color: #d1ecf1;
+    border: 1px solid #bee5eb;
+    color: #0c5460;
+}
+
+.card-title {
+    margin: 0;
+    font-size: 1.25rem;
+}
+
+.alert ul {
+    padding-left: 20px;
+}
+</style>
+
+{% endblock %}

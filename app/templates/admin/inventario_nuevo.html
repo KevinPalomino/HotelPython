@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+
+{% block title %}Nuevo Producto - Hotel Management{% endblock %}
+
+{% block content %}
+<div class="breadcrumb">
+    <a href="{{ url_for('admin.panel_admin') }}">
+        <i class="fas fa-home"></i> Panel Admin
+    </a>
+    <span> / </span>
+    <a href="{{ url_for('admin.ver_inventario') }}">Inventario</a>
+    <span> / Nuevo Producto</span>
+</div>
+
+<h1 class="page-title">
+    <i class="fas fa-plus"></i>
+    Agregar Nuevo Producto
+</h1>
+
+<div class="card">
+    <div class="card-header">
+        <h2 class="card-title">Información del Producto</h2>
+    </div>
+
+    <div class="form-container">
+        <form method="POST">
+            <div class="form-group">
+                <label for="nombre" class="form-label">
+                    <i class="fas fa-box"></i>
+                    Nombre del Producto
+                </label>
+                <input type="text" id="nombre" name="nombre" class="form-input" required 
+                       placeholder="Nombre del producto">
+            </div>
+
+            <div class="form-group">
+                <label for="categoria" class="form-label">
+                    <i class="fas fa-tag"></i>
+                    Categoría
+                </label>
+                <select id="categoria" name="categoria" class="form-select" onchange="mostrarCampoOtra(this.value)">
+                    {% for c in categorias %}
+                        <option value="{{ c.id }}">{{ c.nombre }}</option>
+                    {% endfor %}
+                    <option value="otra">-- Otra --</option>
+                </select>
+            </div>
+
+            <div id="campo_otro" style="display: none;" class="form-group">
+                <label for="nueva_categoria" class="form-label">
+                    <i class="fas fa-plus"></i>
+                    Nueva Categoría
+                </label>
+                <input type="text" id="nueva_categoria" name="nueva_categoria" class="form-input" 
+                       placeholder="Nombre de la nueva categoría">
+            </div>
+
+            <div class="form-group">
+                <label for="cantidad" class="form-label">
+                    <i class="fas fa-sort-numeric-up"></i>
+                    Cantidad
+                </label>
+                <input type="number" id="cantidad" name="cantidad" class="form-input" 
+                       min="0" required placeholder="Cantidad disponible">
+            </div>
+
+            <div class="form-group">
+                <label for="precio" class="form-label">
+                    <i class="fas fa-dollar-sign"></i>
+                    Precio
+                </label>
+                <input type="number" id="precio" name="precio" class="form-input" 
+                       min="0" step="100" required placeholder="Precio del producto">
+            </div>
+
+            <div class="form-group">
+                <label for="descripcion" class="form-label">
+                    <i class="fas fa-info-circle"></i>
+                    Descripción
+                </label>
+                <textarea id="descripcion" name="descripcion" class="form-textarea" 
+                          placeholder="Descripción del producto"></textarea>
+            </div>
+
+            <div class="btn-group">
+                <button type="submit" class="btn btn-success">
+                    <i class="fas fa-save"></i>
+                    Guardar Producto
+                </button>
+                <a href="{{ url_for('admin.ver_inventario') }}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left"></i>
+                    Cancelar
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    function mostrarCampoOtra(valor) {
+        const campo = document.getElementById("campo_otro");
+        campo.style.display = valor === "otra" ? "block" : "none";
+    }
+</script>
+{% endblock %}

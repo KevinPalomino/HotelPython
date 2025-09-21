@@ -1,0 +1,389 @@
+{% extends "base.html" %}
+
+{% block title %}Nueva Reserva - Hotel Management{% endblock %}
+
+{% block content %}
+<!-- Incluir Flatpickr CSS y JS -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+
+<style>
+    /* Estilos para el contenedor de resultados de búsqueda (sin cambios) */
+    .search-results {
+        position: absolute; background-color: white; border: 1px solid #ddd;
+        border-radius: 0 0 5px 5px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        z-index: 1000; width: calc(100% - 2px); max-height: 200px;
+        overflow-y: auto; margin-top: -1px;
+    }
+    .search-results .result-item { padding: 10px; cursor: pointer; border-bottom: 1px solid #eee; }
+    .search-results .result-item:hover { background-color: #f0f0f0; }
+    .search-results .no-results { padding: 10px; color: #777; }
+    .search-results .no-results a { color: #007bff; text-decoration: underline; }
+
+    /* Estilos para los días coloreados en el calendario Flatpickr */
+    .flatpickr-day.reserved-pending {
+        background-color: #ffe082; /* Amarillo */
+        border-color: #ffe082;
+        color: #5d4037;
+    }
+    .flatpickr-day.reserved-occupied {
+        background-color: #ef9a9a; /* Rojo */
+        border-color: #ef9a9a;
+        color: #b71c1c;
+        font-weight: bold;
+    }
+    .flatpickr-day.reserved-pending:hover, .flatpickr-day.reserved-occupied:hover {
+        background-color: #bdbdbd; /* Gris al pasar el mouse para indicar que no se puede seleccionar */
+        border-color: #bdbdbd;
+    }
+    .flatpickr-day.disabled, .flatpickr-day.disabled:hover {
+        background-color: #e0e0e0;
+        border-color: #e0e0e0;
+        cursor: not-allowed;
+    }
+
+    /* Estilos para la selección de habitaciones y el resumen */
+    .reserva-layout {
+        display: grid;
+        grid-template-columns: 2fr 1fr;
+        gap: 2rem;
+        align-items: flex-start;
+    }
+    @media (max-width: 992px) {
+        .reserva-layout { grid-template-columns: 1fr; }
+    }
+
+    .summary-container .card {
+        position: sticky;
+        top: 20px;
+        background-color: #f8f9fa;
+    }
+    .summary-content p {
+        margin: 0.8rem 0;
+        font-size: 1.1rem;
+        display: flex;
+        justify-content: space-between;
+    }
+    .summary-content p span { font-weight: bold; }
+
+    .habitaciones-checkbox-container {
+        max-height: 250px;
+        overflow-y: auto;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+        padding: 10px;
+    }
+    .checkbox-item {
+        display: flex;
+        align-items: center;
+        margin-bottom: 8px;
+    }
+    .checkbox-item input[type="checkbox"] {
+        margin-right: 10px;
+        width: 18px;
+        height: 18px;
+    }
+    .checkbox-item label {
+        display: flex;
+        flex-direction: column;
+        cursor: pointer;
+    }
+    .checkbox-item label small { color: #555; }
+</style>
+
+<div class="breadcrumb">
+    <a href="{{ url_for('recepcion.panel_recepcionista') }}">
+        <i class="fas fa-concierge-bell"></i> Panel Recepción
+    </a>
+    <span> / Nueva Reserva</span>
+</div>
+
+<h1 class="page-title">
+    <i class="fas fa-calendar-plus"></i>
+    Registrar Nueva Reserva
+</h1>
+
+<div class="reserva-layout">
+    <div class="card">
+        <div class="card-header"><h2 class="card-title">Información de la Reserva</h2></div>
+        <div class="form-container">
+            <form method="POST" id="reservaForm">
+                <!-- Búsqueda de cliente (sin cambios) -->
+                <div class="form-group" style="position: relative;">
+                    <label for="cliente_search" class="form-label"><i class="fas fa-user-search"></i> Buscar Cliente</label>
+                    <input type="text" id="cliente_search" class="form-input" placeholder="Escribe para buscar..." autocomplete="off">
+                    <input type="hidden" id="cliente_cedula" name="cliente_cedula" required>
+                    <div id="search_results" class="search-results" style="display: none;"></div>
+                </div>
+
+                <!-- Selector de habitación ahora con checkboxes -->
+                <div class="form-group">
+                    <label class="form-label"><i class="fas fa-bed"></i> Selecciona una o más Habitaciones</label>
+                    <div id="habitaciones-list" class="habitaciones-checkbox-container">
+                        {% for hab in habitaciones %}
+                            <div class="checkbox-item">
+                                <input type="checkbox"
+                                        name="habitacion"
+                                        id="hab-{{ hab.idhabitaciones }}"
+                                        value="{{ hab.idhabitaciones }}"
+                                        class="habitacion-checkbox"
+                                        data-capacidad="{{ hab.capacidad or 1 }}"
+                                        data-precio="{{ hab.precio or 0 }}">
+                                <label for="hab-{{ hab.idhabitaciones }}">
+                                    <span>Habitación {{ hab.idhabitaciones }} ({{ hab.estado }})</span>
+                                    <small>
+                                        {% if hab.tipo %}{{ hab.tipo.nombre }}{% endif %}{% if hab.categoria %} - {{ hab.categoria.nombre }}{% endif %}
+                                        - Cap: {{ hab.capacidad or 1 }}
+                                        - Precio: ${{ "{:,.0f}".format(hab.precio or 0) }}
+                                    </small>
+                                </label>
+                            </div>
+                        {% endfor %}
+                    </div>
+                    {% if not habitaciones %}<small class="text-warning">⚠️ No hay habitaciones activas.</small>{% endif %}
+                </div>
+
+                <!-- Inputs de fecha ahora controlados por Flatpickr -->
+                <div class="form-group">
+                    <label for="checkin" class="form-label"><i class="fas fa-calendar-alt"></i> Fecha de Ingreso (Check-in)</label>
+                    <input type="text" id="checkin" name="checkin" class="form-input" required placeholder="Selecciona una fecha..." readonly>
+                </div>
+                <div class="form-group">
+                    <label for="checkout" class="form-label"><i class="fas fa-calendar-alt"></i> Fecha de Salida (Check-out)</label>
+                    <input type="text" id="checkout" name="checkout" class="form-input" required placeholder="Selecciona una fecha..." readonly>
+                </div>
+
+                <!-- Campos de comentario y abono (sin cambios) -->
+                <div class="form-group">
+                    <label for="comentario" class="form-label"><i class="fas fa-comment"></i> Comentario (opcional)</label>
+                    <textarea id="comentario" name="comentario" class="form-textarea" placeholder="Comentarios adicionales..."></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="abono" class="form-label"><i class="fas fa-dollar-sign"></i> Abono Inicial</label>
+                    <input type="number" id="abono" name="abono" class="form-input" value="0" min="0" required>
+                </div>
+
+                <!-- Botones (sin cambios) -->
+                <div class="btn-group">
+                    <button type="submit" class="btn btn-success"><i class="fas fa-save"></i> Guardar Reserva</button>
+                    <a href="{{ url_for('recepcion.panel_recepcionista') }}" class="btn btn-secondary"><i class="fas fa-arrow-left"></i> Cancelar</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Caja de Resumen de la Reserva -->
+    <div class="summary-container">
+        <div class="card">
+            <div class="card-header"><h2 class="card-title">Resumen de la Reserva</h2></div>
+            <div class="summary-content" style="padding: 1.5rem;">
+                <p>Habitaciones: <span id="summary-count">0</span></p>
+                <p>Capacidad Total: <span id="summary-capacidad">0 personas</span></p>
+                <p>Precio Total / Noche: <span id="summary-precio">$0</span></p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // --- LÓGICA DE BÚSQUEDA DE CLIENTE (sin cambios) ---
+    const searchInput = document.getElementById('cliente_search');
+    const hiddenInput = document.getElementById('cliente_cedula');
+    const searchResultsContainer = document.getElementById('search_results');
+    let debounceTimer;
+    searchInput.addEventListener('input', function() {
+        const query = searchInput.value.trim(); clearTimeout(debounceTimer);
+        if (query.length < 2) { searchResultsContainer.style.display = 'none'; hiddenInput.value = ''; return; }
+        debounceTimer = setTimeout(() => {
+            fetch(`{{ url_for('recepcion.buscar_cliente') }}?q=${encodeURIComponent(query)}`).then(r => r.json()).then(data => {
+                searchResultsContainer.innerHTML = '';
+                if (data.length > 0) {
+                    data.forEach(c => {
+                        const i = document.createElement('div'); i.className = 'result-item'; i.textContent = `${c.nombre} - ${c.cedula}`;
+                        i.dataset.cedula = c.cedula; i.dataset.nombre = c.nombre; searchResultsContainer.appendChild(i);
+                    });
+                } else {
+                    const n = document.createElement('div'); n.className = 'no-results';
+                    const u = `{{ url_for('recepcion.registrar_cliente') }}?next={{ url_for('recepcion.nueva_reserva')|urlencode }}`;
+                    n.innerHTML = `No se encontraron clientes. <a href="${u}">Registrar nuevo cliente</a>`; searchResultsContainer.appendChild(n);
+                }
+                searchResultsContainer.style.display = 'block';
+            });
+        }, 300);
+    });
+    searchResultsContainer.addEventListener('click', function(e) {
+        if (e.target.classList.contains('result-item')) {
+            searchInput.value = `${e.target.dataset.nombre} - ${e.target.dataset.cedula}`;
+            hiddenInput.value = e.target.dataset.cedula; searchResultsContainer.style.display = 'none';
+        }
+    });
+    document.addEventListener('click', function(e) {
+        if (!searchInput.contains(e.target) && !searchResultsContainer.contains(e.target)) { searchResultsContainer.style.display = 'none';}
+    });
+
+    // --- LÓGICA DEL CALENDARIO Y RESUMEN CORREGIDA ---
+    const habitacionesContainer = document.getElementById('habitaciones-list');
+    const checkinInput = document.getElementById('checkin');
+    const checkoutInput = document.getElementById('checkout');
+    let checkinPicker, checkoutPicker;
+    let currentReservedDates = [];
+
+    function createDateFromYMD(dateStr) {
+        // Crear fecha sin problemas de zona horaria
+        const parts = dateStr.split('-');
+        return new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
+    }
+
+    function dateToYMD(date) {
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+    }
+
+    function initializePickers(reservedDates = [], disabledRanges = []) {
+        currentReservedDates = reservedDates;
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        const onDayCreate = (d, dateStr, fp, dayElem) => {
+            const currentDate = dayElem.dateObj;
+            const currentDateStr = dateToYMD(currentDate);
+
+            // CORREGIDO: Colorear los días correctos
+            for (const res of reservedDates) {
+                const startDate = createDateFromYMD(res.checkin);
+                const endDate = createDateFromYMD(res.checkout);
+                
+                // Colorear desde checkin hasta (checkout - 1 día)
+                if (currentDate >= startDate && currentDate < endDate) {
+                    const className = res.estado === 0 ? 'reserved-pending' : 'reserved-occupied';
+                    dayElem.classList.add(className);
+                    break;
+                }
+            }
+        };
+
+        const commonConfig = {
+            dateFormat: "Y-m-d",
+            minDate: dateToYMD(today),
+            onDayCreate: onDayCreate,
+            disable: disabledRanges,
+        };
+
+        if (checkinPicker) checkinPicker.destroy();
+        if (checkoutPicker) checkoutPicker.destroy();
+
+        checkinPicker = flatpickr(checkinInput, {
+            ...commonConfig,
+            onChange: function(selectedDates, dateStr, instance) {
+                if (selectedDates.length > 0) {
+                    updateCheckoutConstraints(selectedDates[0]);
+                }
+            },
+        });
+
+        checkoutPicker = flatpickr(checkoutInput, {
+             ...commonConfig,
+             minDate: dateToYMD(new Date(new Date().setDate(today.getDate() + 1)))
+        });
+    }
+
+    function updateCheckoutConstraints(checkinDate) {
+        if (!checkoutPicker) return;
+
+        // Limpiar el campo checkout
+        checkoutPicker.clear();
+        
+        // La fecha mínima de checkout es un día después del checkin
+        const nextDay = new Date(checkinDate);
+        nextDay.setDate(nextDay.getDate() + 1);
+        checkoutPicker.set('minDate', dateToYMD(nextDay));
+
+        // CORREGIDO: Encontrar la primera fecha de checkin de reservas existentes después de la fecha seleccionada
+        let maxCheckoutDate = null;
+        const checkinDateStr = dateToYMD(checkinDate);
+
+        for (const res of currentReservedDates) {
+            const reservaCheckin = createDateFromYMD(res.checkin);
+            
+            // Si hay una reserva que comienza después de nuestro checkin
+            if (reservaCheckin > checkinDate) {
+                if (!maxCheckoutDate || reservaCheckin < maxCheckoutDate) {
+                    maxCheckoutDate = reservaCheckin;
+                }
+            }
+        }
+
+        // Si encontramos una reserva que limita nuestro checkout, establecer la fecha máxima
+        if (maxCheckoutDate) {
+            checkoutPicker.set('maxDate', dateToYMD(maxCheckoutDate));
+        } else {
+            // Si no hay limitaciones, remover cualquier maxDate existente
+            checkoutPicker.set('maxDate', null);
+        }
+    }
+
+    function updateCalendarsAndSummary() {
+        const checkedBoxes = document.querySelectorAll('.habitacion-checkbox:checked');
+        const habitacionIds = Array.from(checkedBoxes).map(cb => cb.value);
+
+        // Actualizar resumen
+        let totalCapacidad = 0;
+        let totalPrecio = 0;
+        checkedBoxes.forEach(cb => {
+            totalCapacidad += parseInt(cb.dataset.capacidad || '1');
+            totalPrecio += parseFloat(cb.dataset.precio || '0');
+        });
+        document.getElementById('summary-count').textContent = checkedBoxes.length;
+        document.getElementById('summary-capacidad').textContent = `${totalCapacidad} personas`;
+        document.getElementById('summary-precio').textContent = `$${totalPrecio.toLocaleString('es-CO')}`;
+
+        // Limpiar fechas seleccionadas
+        checkinInput.value = '';
+        checkoutInput.value = '';
+        
+        if (habitacionIds.length === 0) {
+            if (checkinPicker) checkinPicker.destroy();
+            if (checkoutPicker) checkoutPicker.destroy();
+            initializePickers([], []);
+            return;
+        }
+
+        const ids_str = habitacionIds.join(',');
+        fetch(`{{ url_for('recepcion.reservas_por_habitacion') }}?ids=${ids_str}`)
+            .then(response => response.json())
+            .then(data => {
+                // CORREGIDO: Crear rangos deshabilitados correctos
+                const disabledRanges = data.map(res => {
+                    const startDate = createDateFromYMD(res.checkin);
+                    const endDate = createDateFromYMD(res.checkout);
+                    // Deshabilitar desde checkin hasta (checkout - 1 día)
+                    const disabledEndDate = new Date(endDate);
+                    disabledEndDate.setDate(disabledEndDate.getDate() - 1);
+                    
+                    return { 
+                        from: dateToYMD(startDate), 
+                        to: dateToYMD(disabledEndDate) 
+                    };
+                });
+                
+                initializePickers(data, disabledRanges);
+            })
+            .catch(error => {
+                console.error("Error al cargar fechas:", error);
+                initializePickers([], []);
+            });
+    }
+
+    habitacionesContainer.addEventListener('change', function(e) {
+        if (e.target.classList.contains('habitacion-checkbox')) {
+            updateCalendarsAndSummary();
+        }
+    });
+
+    initializePickers([], []);
+});
+</script>
+{% endblock %}

@@ -1,0 +1,533 @@
+{% extends "base.html" %}
+
+{% block title %}Check-in Directo - Hotel Management{% endblock %}
+
+{% block content %}
+<!-- Incluir Flatpickr CSS y JS -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+
+<style>
+    /* Estilos para el contenedor de resultados de búsqueda */
+    .search-results {
+        position: absolute; background-color: white; border: 1px solid #ddd;
+        border-radius: 0 0 5px 5px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        z-index: 1000; width: calc(100% - 2px); max-height: 200px;
+        overflow-y: auto; margin-top: -1px;
+    }
+    .search-results .result-item { padding: 10px; cursor: pointer; border-bottom: 1px solid #eee; }
+    .search-results .result-item:hover { background-color: #f0f0f0; }
+    .search-results .no-results { padding: 10px; color: #777; }
+    .search-results .no-results a { color: #007bff; text-decoration: underline; }
+
+    /* Estilos para los días coloreados en el calendario Flatpickr */
+    .flatpickr-day.reserved-pending {
+        background-color: #ffe082; /* Amarillo */
+        border-color: #ffe082;
+        color: #5d4037;
+    }
+    .flatpickr-day.reserved-occupied {
+        background-color: #ef9a9a; /* Rojo */
+        border-color: #ef9a9a;
+        color: #b71c1c;
+        font-weight: bold;
+    }
+    .flatpickr-day.reserved-pending:hover, .flatpickr-day.reserved-occupied:hover {
+        background-color: #bdbdbd; /* Gris al pasar el mouse para indicar que no se puede seleccionar */
+        border-color: #bdbdbd;
+    }
+    .flatpickr-day.disabled, .flatpickr-day.disabled:hover {
+        background-color: #e0e0e0;
+        border-color: #e0e0e0;
+        cursor: not-allowed;
+    }
+
+    /* Estilos para la selección de habitaciones y el resumen */
+    .checkin-layout {
+        display: grid;
+        grid-template-columns: 2fr 1fr;
+        gap: 2rem;
+        align-items: flex-start;
+    }
+    @media (max-width: 992px) {
+        .checkin-layout { grid-template-columns: 1fr; }
+    }
+
+    .summary-container .card {
+        position: sticky;
+        top: 20px;
+        background-color: #f8f9fa;
+    }
+    .summary-content p {
+        margin: 0.8rem 0;
+        font-size: 1.1rem;
+        display: flex;
+        justify-content: space-between;
+    }
+    .summary-content p span { font-weight: bold; }
+
+    .habitaciones-checkbox-container {
+        max-height: 250px;
+        overflow-y: auto;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+        padding: 10px;
+    }
+    .checkbox-item {
+        display: flex;
+        align-items: center;
+        margin-bottom: 8px;
+    }
+    .checkbox-item input[type="checkbox"] {
+        margin-right: 10px;
+        width: 18px;
+        height: 18px;
+    }
+    .checkbox-item label {
+        display: flex;
+        flex-direction: column;
+        cursor: pointer;
+    }
+    .checkbox-item label small { color: #555; }
+
+    /* Estilo especial para el check-in directo */
+    .checkin-badge {
+        background-color: #28a745;
+        color: white;
+        padding: 0.3rem 0.8rem;
+        border-radius: 20px;
+        font-size: 0.9rem;
+        font-weight: bold;
+        margin-left: 1rem;
+    }
+</style>
+
+<div class="breadcrumb">
+    <a href="{{ url_for('recepcion.panel_recepcionista') }}">
+        <i class="fas fa-concierge-bell"></i> Panel Recepción
+    </a>
+    <a href="{{ url_for('recepcion.ver_reservas_checkin') }}"> / Check-in</a>
+    <span> / Check-in Directo</span>
+</div>
+
+<h1 class="page-title">
+    <i class="fas fa-walking"></i>
+    Registrar Check-in Directo (Sin Reserva)
+    <span class="checkin-badge">HOY</span>
+</h1>
+
+<div class="checkin-layout">
+    <div class="card">
+        <div class="card-header">
+            <h2 class="card-title">Información del Huésped y Estancia</h2>
+        </div>
+
+        <div class="form-container">
+            <form method="POST" id="checkinDirectoForm">
+                <!-- Búsqueda de cliente -->
+                <div class="form-group" style="position: relative;">
+                    <label for="cliente_search" class="form-label">
+                        <i class="fas fa-user-search"></i> Buscar Cliente
+                    </label>
+                    <input type="text" id="cliente_search" class="form-input" 
+                           placeholder="Escribe para buscar..." autocomplete="off">
+                    <input type="hidden" id="cliente_cedula" name="cliente_cedula" required>
+                    <div id="search_results" class="search-results" style="display: none;"></div>
+                </div>
+
+                <!-- Selector de habitaciones con checkboxes -->
+                <div class="form-group">
+                    <label class="form-label">
+                        <i class="fas fa-bed"></i> Selecciona una o más Habitaciones Disponibles para Check-in HOY
+                    </label>
+                    {% if habitaciones|length > 0 %}
+                        <div id="habitaciones-list" class="habitaciones-checkbox-container">
+                            {% for hab in habitaciones %}
+                                <div class="checkbox-item">
+                                    <input type="checkbox"
+                                            name="habitacion"
+                                            id="hab-{{ hab.idhabitaciones }}"
+                                            value="{{ hab.idhabitaciones }}"
+                                            class="habitacion-checkbox"
+                                            data-capacidad="{{ hab.capacidad or 1 }}"
+                                            data-precio="{{ hab.precio or 0 }}">
+                                    <label for="hab-{{ hab.idhabitaciones }}">
+                                        <span>Habitación {{ hab.idhabitaciones }} ({{ hab.estado }})</span>
+                                        <small>
+                                            {% if hab.tipo %}{{ hab.tipo.nombre }}{% endif %}{% if hab.categoria %} - {{ hab.categoria.nombre }}{% endif %}
+                                            - Cap: {{ hab.capacidad or 1 }}
+                                            - Precio: ${{ "{:,.0f}".format(hab.precio or 0) }}
+                                        </small>
+                                    </label>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div style="text-align: center; padding: 2rem; background-color: #fff3cd; border: 1px solid #ffeaa7; border-radius: 8px; margin: 1rem 0;">
+                            <i class="fas fa-exclamation-triangle" style="font-size: 2rem; color: #856404; margin-bottom: 1rem;"></i>
+                            <p style="font-size: 1.1rem; color: #856404; margin: 0; font-weight: bold;">
+                                No hay ninguna habitación disponible para hacer check-in directo hoy.
+                            </p>
+                            <small style="color: #856404; display: block; margin-top: 0.5rem;">
+                                Todas las habitaciones están ocupadas, reservadas o no disponibles para el día de hoy.
+                            </small>
+                        </div>
+                        <div style="margin-top: 1rem;">
+                            <a href="{{ url_for('recepcion.nueva_reserva') }}" class="btn btn-info" style="margin-right: 0.5rem;">
+                                <i class="fas fa-calendar-plus"></i> Crear Reserva Futura
+                            </a>
+                            <a href="{{ url_for('recepcion.ver_reservas_checkout') }}" class="btn btn-warning">
+                                <i class="fas fa-sign-out-alt"></i> Ver Check-outs de Hoy
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+
+                <!-- Fecha de Check-in (readonly - siempre hoy) -->
+                <div class="form-group">
+                    <label for="checkin" class="form-label">
+                        <i class="fas fa-calendar-alt"></i> Fecha de Ingreso (Check-in)
+                    </label>
+                    <input type="text" id="checkin" name="checkin" class="form-input" 
+                           value="{{ hoy }}" readonly style="background-color: #e9ecef;">
+                    <small class="text-info">El check-in directo siempre se realiza para el día de hoy.</small>
+                </div>
+
+                <!-- Fecha de Check-out (controlada por Flatpickr) -->
+                <div class="form-group">
+                    <label for="checkout" class="form-label">
+                        <i class="fas fa-calendar-alt"></i> Fecha de Salida (Check-out)
+                    </label>
+                    <input type="text" id="checkout" name="checkout" class="form-input" 
+                           required placeholder="Selecciona una fecha..." readonly>
+                </div>
+
+                <!-- Abono inicial -->
+                <div class="form-group">
+                    <label for="abono" class="form-label">
+                        <i class="fas fa-dollar-sign"></i> Abono Inicial
+                    </label>
+                    <input type="number" id="abono" name="abono" class="form-input" 
+                           value="0" min="0" required placeholder="Monto del abono">
+                </div>
+
+                <!-- Comentario opcional -->
+                <div class="form-group">
+                    <label for="comentario" class="form-label">
+                        <i class="fas fa-comment"></i> Comentario (opcional)
+                    </label>
+                    <textarea id="comentario" name="comentario" class="form-textarea" 
+                              placeholder="Comentarios adicionales..."></textarea>
+                </div>
+
+                <!-- Botones -->
+                <div class="btn-group">
+                    <button type="submit" class="btn btn-success">
+                        <i class="fas fa-check-circle"></i>
+                        Realizar Check-in Directo
+                    </button>
+                    <a href="{{ url_for('recepcion.ver_reservas_checkin') }}" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left"></i>
+                        Cancelar
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Caja de Resumen del Check-in -->
+    <div class="summary-container">
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title">Resumen del Check-in</h2>
+            </div>
+            <div class="summary-content" style="padding: 1.5rem;">
+                <p>Habitaciones: <span id="summary-count">0</span></p>
+                <p>Capacidad Total: <span id="summary-capacidad">0 personas</span></p>
+                <p>Precio Total / Noche: <span id="summary-precio">$0</span></p>
+                <hr>
+                <p>Check-in: <span style="color: #28a745; font-weight: bold;">{{ hoy }}</span></p>
+                <p>Check-out: <span id="summary-checkout">No seleccionado</span></p>
+                <p>Noches: <span id="summary-noches">0</span></p>
+                <hr>
+                <p style="font-size: 1.2rem; color: #007bff;">
+                    Total Estimado: <span id="summary-total">$0</span>
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // --- LÓGICA DE BÚSQUEDA DE CLIENTE ---
+    const searchInput = document.getElementById('cliente_search');
+    const hiddenInput = document.getElementById('cliente_cedula');
+    const searchResultsContainer = document.getElementById('search_results');
+    let debounceTimer;
+
+    searchInput.addEventListener('input', function() {
+        const query = searchInput.value.trim();
+        clearTimeout(debounceTimer);
+        
+        if (query.length < 2) {
+            searchResultsContainer.style.display = 'none';
+            hiddenInput.value = '';
+            return;
+        }
+
+        debounceTimer = setTimeout(() => {
+            fetch(`{{ url_for('recepcion.buscar_cliente') }}?q=${encodeURIComponent(query)}`)
+                .then(response => response.json())
+                .then(data => {
+                    searchResultsContainer.innerHTML = '';
+                    
+                    if (data.length > 0) {
+                        data.forEach(cliente => {
+                            const item = document.createElement('div');
+                            item.className = 'result-item';
+                            item.textContent = `${cliente.nombre} - ${cliente.cedula}`;
+                            item.dataset.cedula = cliente.cedula;
+                            item.dataset.nombre = cliente.nombre;
+                            searchResultsContainer.appendChild(item);
+                        });
+                    } else {
+                        const noResults = document.createElement('div');
+                        noResults.className = 'no-results';
+                        const registerUrl = `{{ url_for('recepcion.registrar_cliente') }}?next={{ url_for('recepcion.checkin_directo')|urlencode }}`;
+                        noResults.innerHTML = `No se encontraron clientes. <a href="${registerUrl}">Registrar nuevo cliente</a>`;
+                        searchResultsContainer.appendChild(noResults);
+                    }
+                    
+                    searchResultsContainer.style.display = 'block';
+                })
+                .catch(error => {
+                    console.error('Error en búsqueda:', error);
+                });
+        }, 300);
+    });
+
+    searchResultsContainer.addEventListener('click', function(e) {
+        if (e.target.classList.contains('result-item')) {
+            searchInput.value = `${e.target.dataset.nombre} - ${e.target.dataset.cedula}`;
+            hiddenInput.value = e.target.dataset.cedula;
+            searchResultsContainer.style.display = 'none';
+        }
+    });
+
+    document.addEventListener('click', function(e) {
+        if (!searchInput.contains(e.target) && !searchResultsContainer.contains(e.target)) {
+            searchResultsContainer.style.display = 'none';
+        }
+    });
+
+    // --- LÓGICA DEL CALENDARIO Y RESUMEN ---
+    const habitacionesContainer = document.getElementById('habitaciones-list');
+    const checkoutInput = document.getElementById('checkout');
+    let checkoutPicker;
+    let currentReservedDates = [];
+
+    function createDateFromYMD(dateStr) {
+        const parts = dateStr.split('-');
+        return new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
+    }
+
+    function dateToYMD(date) {
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+    }
+
+    function calculateNights(checkin, checkout) {
+        if (!checkout) return 0;
+        const checkinDate = createDateFromYMD(checkin);
+        const checkoutDate = createDateFromYMD(checkout);
+        const diffTime = checkoutDate - checkinDate;
+        return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    }
+
+    function updateSummary() {
+        const checkedBoxes = document.querySelectorAll('.habitacion-checkbox:checked');
+        const checkoutDate = checkoutInput.value;
+        
+        let totalCapacidad = 0;
+        let totalPrecio = 0;
+        checkedBoxes.forEach(cb => {
+            totalCapacidad += parseInt(cb.dataset.capacidad || '1');
+            totalPrecio += parseFloat(cb.dataset.precio || '0');
+        });
+
+        const nights = calculateNights('{{ hoy }}', checkoutDate);
+        const totalEstimado = totalPrecio * nights;
+
+        document.getElementById('summary-count').textContent = checkedBoxes.length;
+        document.getElementById('summary-capacidad').textContent = `${totalCapacidad} personas`;
+        document.getElementById('summary-precio').textContent = `$${totalPrecio.toLocaleString('es-CO')}`;
+        document.getElementById('summary-checkout').textContent = checkoutDate || 'No seleccionado';
+        document.getElementById('summary-noches').textContent = nights;
+        document.getElementById('summary-total').textContent = `$${totalEstimado.toLocaleString('es-CO')}`;
+    }
+
+    function initializeCheckoutPicker(reservedDates = [], disabledRanges = []) {
+        currentReservedDates = reservedDates;
+        const tomorrow = new Date();
+        tomorrow.setDate(tomorrow.getDate() + 1);
+
+        const onDayCreate = (d, dateStr, fp, dayElem) => {
+            const currentDate = dayElem.dateObj;
+            
+            for (const res of reservedDates) {
+                const startDate = createDateFromYMD(res.checkin);
+                const endDate = createDateFromYMD(res.checkout);
+                
+                if (currentDate >= startDate && currentDate < endDate) {
+                    const className = res.estado === 0 ? 'reserved-pending' : 'reserved-occupied';
+                    dayElem.classList.add(className);
+                    break;
+                }
+            }
+        };
+
+        if (checkoutPicker) checkoutPicker.destroy();
+
+        checkoutPicker = flatpickr(checkoutInput, {
+            dateFormat: "Y-m-d",
+            minDate: dateToYMD(tomorrow),
+            onDayCreate: onDayCreate,
+            disable: disabledRanges,
+            onChange: function(selectedDates, dateStr, instance) {
+                updateSummary();
+                
+                if (selectedDates.length > 0) {
+                    const selectedDate = selectedDates[0];
+                    const selectedDateStr = dateToYMD(selectedDate);
+                    
+                    // Buscar la próxima reserva que limite nuestro checkout
+                    const today = createDateFromYMD('{{ hoy }}');
+                    let maxCheckoutDate = null;
+
+                    for (const res of currentReservedDates) {
+                        const reservaCheckin = createDateFromYMD(res.checkin);
+                        
+                        if (reservaCheckin > today) {
+                            if (!maxCheckoutDate || reservaCheckin < maxCheckoutDate) {
+                                maxCheckoutDate = reservaCheckin;
+                            }
+                        }
+                    }
+
+                    if (maxCheckoutDate && selectedDate >= maxCheckoutDate) {
+                        checkoutPicker.clear();
+                        alert(`No puedes seleccionar esa fecha. Hay una reserva que comienza el ${dateToYMD(maxCheckoutDate)}`);
+                    }
+                }
+            }
+        });
+    }
+
+    function updateCalendarsAndSummary() {
+        const checkedBoxes = document.querySelectorAll('.habitacion-checkbox:checked');
+        const habitacionIds = Array.from(checkedBoxes).map(cb => cb.value);
+
+        // Limpiar fecha de checkout seleccionada
+        checkoutInput.value = '';
+        updateSummary();
+        
+        if (habitacionIds.length === 0) {
+            if (checkoutPicker) checkoutPicker.destroy();
+            initializeCheckoutPicker([], []);
+            return;
+        }
+
+        const ids_str = habitacionIds.join(',');
+        fetch(`{{ url_for('recepcion.reservas_por_habitacion') }}?ids=${ids_str}`)
+            .then(response => response.json())
+            .then(data => {
+                const today = createDateFromYMD('{{ hoy }}');
+                
+                // Crear rangos deshabilitados para fechas reservadas
+                const disabledRanges = [];
+                let maxCheckoutDate = null;
+
+                for (const res of data) {
+                    const startDate = createDateFromYMD(res.checkin);
+                    const endDate = createDateFromYMD(res.checkout);
+                    
+                    // Si la reserva comienza después de hoy
+                    if (startDate > today) {
+                        if (!maxCheckoutDate || startDate < maxCheckoutDate) {
+                            maxCheckoutDate = startDate;
+                        }
+                        
+                        // Deshabilitar desde checkin hasta (checkout - 1 día)
+                        const disabledEndDate = new Date(endDate);
+                        disabledEndDate.setDate(disabledEndDate.getDate() - 1);
+                        
+                        disabledRanges.push({
+                            from: dateToYMD(startDate),
+                            to: dateToYMD(disabledEndDate)
+                        });
+                    }
+                }
+                
+                initializeCheckoutPicker(data, disabledRanges);
+                
+                // Si hay una fecha límite, mostrar información
+                if (maxCheckoutDate) {
+                    console.log(`Próxima reserva limita checkout hasta: ${dateToYMD(maxCheckoutDate)}`);
+                }
+            })
+            .catch(error => {
+                console.error("Error al cargar fechas:", error);
+                initializeCheckoutPicker([], []);
+            });
+    }
+
+    habitacionesContainer.addEventListener('change', function(e) {
+        if (e.target.classList.contains('habitacion-checkbox')) {
+            updateCalendarsAndSummary();
+        }
+    });
+
+    // Inicializar calendario sin restricciones
+    initializeCheckoutPicker([], []);
+    updateSummary();
+
+    // Validación del formulario antes de enviar
+    document.getElementById('checkinDirectoForm').addEventListener('submit', function(e) {
+        const clienteCedula = document.getElementById('cliente_cedula').value;
+        const habitacionesSeleccionadas = document.querySelectorAll('.habitacion-checkbox:checked');
+        const checkoutDate = document.getElementById('checkout').value;
+        const totalHabitacionesDisponibles = document.querySelectorAll('.habitacion-checkbox').length;
+
+        // Verificar si no hay habitaciones disponibles
+        if (totalHabitacionesDisponibles === 0) {
+            e.preventDefault();
+            alert('No hay habitaciones disponibles para check-in directo hoy.');
+            return;
+        }
+
+        if (!clienteCedula) {
+            e.preventDefault();
+            alert('Debe seleccionar un cliente.');
+            return;
+        }
+
+        if (habitacionesSeleccionadas.length === 0) {
+            e.preventDefault();
+            alert('Debe seleccionar al menos una habitación.');
+            return;
+        }
+
+        if (!checkoutDate) {
+            e.preventDefault();
+            alert('Debe seleccionar una fecha de checkout.');
+            return;
+        }
+
+        // Si todo está bien, el formulario se enviará normalmente
+    });
+});
+</script>
+{% endblock %}

@@ -1,0 +1,144 @@
+{% extends "base.html" %}
+
+{% block title %}Reservar Habitación - Hotel Management{% endblock %}
+
+{% block content %}
+<div class="breadcrumb">
+    <a href="{{ url_for('cliente.ver_habitaciones') }}">
+        <i class="fas fa-bed"></i> Habitaciones
+    </a>
+    <span> / Reservar Habitación #{{ habitacion.idhabitaciones }}</span>
+</div>
+
+<h1 class="page-title">
+    <i class="fas fa-calendar-plus"></i>
+    Reservar Habitación #{{ habitacion.idhabitaciones }}
+</h1>
+
+<div class="card">
+    <div class="card-header">
+        <h2 class="card-title">{{ habitacion.tipo }}</h2>
+        <div class="room-price">${{ "{:,.0f}".format(habitacion.precio) }} por noche</div>
+    </div>
+
+    <div class="form-container">
+        <form method="POST">
+            <div class="form-group">
+                <label for="cedula" class="form-label">
+                    <i class="fas fa-id-card"></i>
+                    Cédula
+                </label>
+                <input type="text" id="cedula" name="cedula" class="form-input" required 
+                       placeholder="Número de cédula">
+            </div>
+
+            <div class="form-group">
+                <label for="nombre" class="form-label">
+                    <i class="fas fa-user"></i>
+                    Nombre Completo
+                </label>
+                <input type="text" id="nombre" name="nombre" class="form-input" required 
+                       placeholder="Nombre completo">
+            </div>
+
+            <div class="form-group">
+                <label for="correo" class="form-label">
+                    <i class="fas fa-envelope"></i>
+                    Correo Electrónico
+                </label>
+                <input type="email" id="correo" name="correo" class="form-input" required 
+                       placeholder="correo@ejemplo.com">
+            </div>
+
+            <div class="form-group">
+                <label for="telefono" class="form-label">
+                    <i class="fas fa-phone"></i>
+                    Teléfono
+                </label>
+                <input type="text" id="telefono" name="telefono" class="form-input" required 
+                       placeholder="Número de teléfono">
+            </div>
+
+            <div class="form-group">
+                <label for="departamento" class="form-label">
+                    <i class="fas fa-map-marker-alt"></i>
+                    Departamento
+                </label>
+                <input type="text" id="departamento" name="departamento" class="form-input" required 
+                       placeholder="Departamento de residencia">
+            </div>
+
+            <div class="form-group">
+                <label for="ciudad" class="form-label">
+                    <i class="fas fa-city"></i>
+                    Ciudad
+                </label>
+                <input type="text" id="ciudad" name="ciudad" class="form-input" required 
+                       placeholder="Ciudad de residencia">
+            </div>
+
+            <div class="form-group">
+                <label for="entrada" class="form-label">
+                    <i class="fas fa-calendar-alt"></i>
+                    Fecha de Entrada
+                </label>
+                <input type="date" id="entrada" name="entrada" class="form-input" 
+                       min="{{ hoy }}" required>
+            </div>
+
+            <div class="form-group">
+                <label for="salida" class="form-label">
+                    <i class="fas fa-calendar-alt"></i>
+                    Fecha de Salida
+                </label>
+                <input type="date" id="salida" name="salida" class="form-input" required>
+            </div>
+
+            <div class="form-group">
+                <label for="metodo_pago" class="form-label">
+                    <i class="fas fa-credit-card"></i>
+                    Método de Pago
+                </label>
+                <select id="metodo_pago" name="metodo_pago" class="form-select" 
+                        onchange="mostrarAbono()" required>
+                    <option value="">Seleccione método de pago</option>
+                    <option value="fisico">Pago en caja (físico)</option>
+                    <option value="nequi">Nequi</option>
+                </select>
+            </div>
+
+            <div id="campo_abono" style="display: none;" class="form-group">
+                <label for="abono" class="form-label">
+                    <i class="fas fa-dollar-sign"></i>
+                    Monto del Abono
+                </label>
+                <input type="number" id="abono" name="abono" class="form-input" 
+                       min="0" placeholder="Monto del abono inicial">
+            </div>
+
+            <div class="btn-group">
+                <button type="submit" class="btn btn-success">
+                    <i class="fas fa-check"></i>
+                    Confirmar Reserva
+                </button>
+                <a href="{{ url_for('cliente.ver_habitaciones') }}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left"></i>
+                    Volver a Habitaciones
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    function mostrarAbono() {
+        const metodo = document.getElementById("metodo_pago").value;
+        const campoAbono = document.getElementById("campo_abono");
+        if (metodo === "nequi" || metodo === "fisico") {
+            campoAbono.style.display = "block";
+        } else {
+            campoAbono.style.display = "none";
+        }
+    }
+</script>
+{% endblock %}

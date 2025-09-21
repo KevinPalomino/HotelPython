@@ -1,0 +1,114 @@
+{% extends "base.html" %} {% block title %}Habitaciones Disponibles - Hotel
+Management{% endblock %} {% block content %}
+<h1 class="page-title">
+  <i class="fas fa-bed"></i>
+  Habitaciones Disponibles
+</h1>
+
+<div class="room-grid">
+  {% for habitacion in habitaciones %}
+  <div class="room-card">
+    {% if habitacion.fotos|length > 0 %}
+    <div
+      id="carousel_{{ habitacion.idhabitaciones }}"
+      class="carousel slide carousel-fade"
+      data-bs-ride="carousel"
+      data-bs-interval="4000"
+    >
+      <div class="carousel-inner">
+        {% for foto in habitacion.fotos %}
+        <div class="carousel-item {% if loop.first %}active{% endif %}">
+          <img
+            src="{{ url_for('cliente.imagen_habitacion', idfoto=foto.idfotos) }}"
+            class="d-block w-100 room-image rounded"
+            alt="Foto habitación"
+          />
+        </div>
+        {% endfor %}
+      </div>
+      {% if habitacion.fotos|length > 1 %}
+      <button
+        class="carousel-control-prev"
+        type="button"
+        data-bs-target="#carousel_{{ habitacion.idhabitaciones }}"
+        data-bs-slide="prev"
+      >
+        <span class="carousel-control-prev-icon"></span>
+        <span class="visually-hidden">Anterior</span>
+      </button>
+      <button
+        class="carousel-control-next"
+        type="button"
+        data-bs-target="#carousel_{{ habitacion.idhabitaciones }}"
+        data-bs-slide="next"
+      >
+        <span class="carousel-control-next-icon"></span>
+        <span class="visually-hidden">Siguiente</span>
+      </button>
+      {% endif %}
+    </div>
+    {% else %}
+    <img
+      src="/PROYECTO_HOTEL_2025/BD/imagenhotel.png"
+      alt="Sin imagen disponible"
+      class="room-image rounded"
+    />
+    {% endif %}
+
+    <div class="room-content">
+      <h3 class="room-title">{{ habitacion.tipo.nombre }}</h3>
+
+      <div class="room-details">
+        <div class="room-detail">
+          <span><i class="fas fa-users"></i> Capacidad:</span>
+          <span>{{ habitacion.capacidad }} personas</span>
+        </div>
+        <div class="room-detail">
+          <span><i class="fas fa-tag"></i> Categoría:</span>
+          <span>{{ habitacion.categoria.nombre }}</span>
+        </div>
+        <div class="room-detail">
+          <span><i class="fas fa-bed"></i> Camas:</span>
+          <div class="amenities">
+            {% for cama in habitacion.camas %}
+            <span class="amenity-tag">{{ cama.nombre }}</span>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+
+      <div class="room-price">
+        ${{ "{:,.0f}".format(habitacion.precio) }}
+        <small style="font-size: 0.8rem; color: var(--text-light)"
+          >por noche</small
+        >
+      </div>
+
+      <div class="btn-group">
+        <a
+          href="{{ url_for('cliente.reservar_habitacion', id=habitacion.idhabitaciones) }}"
+          class="btn btn-primary"
+        >
+          <i class="fas fa-calendar-plus"></i>
+          Reservar Ahora
+        </a>
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+
+{% if not habitaciones %}
+<div class="card text-center">
+  <div class="card-header">
+    <h2 class="card-title">
+      <i class="fas fa-info-circle"></i>
+      No hay habitaciones disponibles
+    </h2>
+  </div>
+  <p>
+    En este momento no tenemos habitaciones disponibles. Por favor, inténtelo
+    más tarde.
+  </p>
+</div>
+{% endif %} {% endblock %}

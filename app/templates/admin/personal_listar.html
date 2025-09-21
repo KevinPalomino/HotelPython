@@ -1,0 +1,96 @@
+{% extends "base.html" %} 
+{% block title %}Gestión del Personal - Hotel Management{% endblock %} 
+{% block content %}
+
+<div class="breadcrumb">
+  <a href="{{ url_for('admin.panel_admin') }}">
+    <i class="fas fa-home"></i> Panel Admin
+  </a>
+  <span> / Gestión del Personal</span>
+</div>
+
+<h1 class="page-title">
+  <i class="fas fa-users"></i>
+  Gestión del Personal
+</h1>
+
+<div class="card">
+  <div class="card-header">
+    <div style="display: flex; justify-content: space-between; align-items: center">
+      <h2 class="card-title">Empleados del Hotel</h2>
+      <a href="{{ url_for('admin.nuevo_empleado') }}" class="btn btn-success">
+        <i class="fas fa-user-plus"></i> Nuevo Empleado
+      </a>
+    </div>
+  </div>
+
+  <!-- 🔍 Campo de búsqueda -->
+  <div style="padding: 1rem;">
+    <input 
+      type="text" 
+      id="filtroEmpleados" 
+      class="form-control" 
+      placeholder="Buscar por cédula, nombre, correo o teléfono..."
+      style="width: 100%; padding: 0.5rem; border: 1px solid #ccc; border-radius: 5px;"
+    >
+  </div>
+
+  <div class="table-container">
+    <table class="table" id="tablaEmpleados">
+      <thead>
+        <tr>
+          <th><i class="fas fa-id-card"></i> Cédula</th>
+          <th><i class="fas fa-user"></i> Nombre</th>
+          <th><i class="fas fa-envelope"></i> Correo</th>
+          <th><i class="fas fa-phone"></i> Teléfono</th>
+          <th><i class="fas fa-map-marker-alt"></i> Dirección</th>
+          <th><i class="fas fa-user-tag"></i> Rol</th>
+          <th><i class="fas fa-cogs"></i> Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for emp in empleados %}
+        <tr>
+          <td>{{ emp.cedula }}</td>
+          <td>{{ emp.nombre }}</td>
+          <td>{{ emp.correo }}</td>
+          <td>{{ emp.telefono }}</td>
+          <td>{{ emp.direccion }}</td>
+          <td><span class="status-badge status-active">{{ emp.rol.nombre }}</span></td>
+          <td class="actions">
+            <a href="{{ url_for('admin.editar_empleado', cedula=emp.cedula) }}" class="btn btn-warning" style="margin-right: 0.5rem">
+              <i class="fas fa-edit"></i>
+            </a>
+            <a href="{{ url_for('admin.eliminar_empleado', cedula=emp.cedula) }}" class="btn btn-danger" onclick="return confirm('¿Seguro que deseas eliminar este empleado?')">
+              <i class="fas fa-trash"></i>
+            </a>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- 📜 Script del filtro -->
+<script>
+document.getElementById("filtroEmpleados").addEventListener("keyup", function() {
+  let filtro = this.value.toLowerCase();
+  let filas = document.querySelectorAll("#tablaEmpleados tbody tr");
+
+  filas.forEach(function(fila) {
+    let cedula = fila.cells[0].textContent.toLowerCase();
+    let nombre = fila.cells[1].textContent.toLowerCase();
+    let correo = fila.cells[2].textContent.toLowerCase();
+    let telefono = fila.cells[3].textContent.toLowerCase();
+
+    if (cedula.includes(filtro) || nombre.includes(filtro) || correo.includes(filtro) || telefono.includes(filtro)) {
+      fila.style.display = "";
+    } else {
+      fila.style.display = "none";
+    }
+  });
+});
+</script>
+
+{% endblock %}

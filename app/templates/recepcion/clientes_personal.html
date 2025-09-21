@@ -1,0 +1,95 @@
+{% extends "base.html" %} {% block title %}Clientes / Personal - Hotel
+Management{% endblock %} {% block content %}
+<div class="breadcrumb">
+  <a href="{{ url_for('recepcion.panel_recepcionista') }}">
+    <i class="fas fa-home"></i> Panel Recepción
+  </a>
+  <span> / Clientes / Personal</span>
+</div>
+
+<h1 class="page-title">
+  <i class="fas fa-users"></i>
+  Clientes y Personal
+</h1>
+
+<div class="card">
+  <div class="card-header">
+    <div
+      style="
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        max-width: 420px;
+        width: 100%;
+      "
+    >
+      <i class="fas fa-search" style="color: #666; font-size: 1.2rem"></i>
+      <input
+        type="text"
+        id="buscador"
+        class="form-input"
+        placeholder="Buscar por cédula, nombre o rol..."
+        style="
+          width: 100%;
+          padding: 8px 12px;
+          border: 1px solid #ccc;
+          border-radius: 8px;
+          font-size: 0.95rem;
+          transition: border-color 0.3s;
+        "
+        onfocus="this.style.borderColor='#007bff';"
+        onblur="this.style.borderColor='#ccc';"
+      />
+    </div>
+  </div>
+
+  <div class="table-container">
+    <table class="table">
+      <thead>
+        <tr>
+          <th><i class="fas fa-id-card"></i> Cédula</th>
+          <th><i class="fas fa-user"></i> Nombre</th>
+          <th><i class="fas fa-envelope"></i> Correo</th>
+          <th><i class="fas fa-phone"></i> Teléfono</th>
+          <th><i class="fas fa-map-marker-alt"></i> Dirección</th>
+          <th><i class="fas fa-user-tag"></i> Rol</th>
+        </tr>
+      </thead>
+      <tbody id="tabla-personas">
+        {% for persona in personas %}
+        <tr>
+          <td>{{ persona.cedula }}</td>
+          <td>{{ persona.nombre }}</td>
+          <td>{{ persona.correo }}</td>
+          <td>{{ persona.telefono }}</td>
+          <td>{{ persona.direccion }}</td>
+          <td>
+            <span class="status-badge status-active"
+              >{{ persona.rol.nombre }}</span
+            >
+          </td>
+        </tr>
+        {% else %}
+        <tr>
+          <td colspan="6" class="text-center">No se encontraron resultados.</td>
+        </tr>
+        {% endfor %} {% block scripts %}
+        <script>
+          document
+            .getElementById("buscador")
+            .addEventListener("input", function () {
+              const filtro = this.value.toLowerCase();
+              const filas = document.querySelectorAll("#tabla-personas tr");
+
+              filas.forEach((fila) => {
+                const textoFila = fila.innerText.toLowerCase();
+                fila.style.display = textoFila.includes(filtro) ? "" : "none";
+              });
+            });
+        </script>
+        {% endblock %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

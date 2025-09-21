@@ -1,0 +1,151 @@
+{% extends "base.html" %}
+
+{% block title %}Editar Habitación - Hotel Management{% endblock %}
+
+{% block content %}
+<div class="breadcrumb">
+    <a href="{{ url_for('admin.panel_admin') }}">
+        <i class="fas fa-home"></i> Panel Admin
+    </a>
+    <span> / </span>
+    <a href="{{ url_for('admin.listar_habitaciones') }}">Habitaciones</a>
+    <span> / Editar {{ habitacion.tipo.nombre }}</span>
+</div>
+
+<h1 class="page-title">
+    <i class="fas fa-edit"></i>
+    Editar {{ habitacion.tipo.nombre }}
+</h1>
+
+<div class="card">
+    <div class="card-header">
+        <h2 class="card-title">Información de la Habitación</h2>
+    </div>
+
+    <div class="form-container">
+        <form method="POST" enctype="multipart/form-data">
+            <div class="form-group">
+                <label for="tipo_id" class="form-label">
+                    <i class="fas fa-door-open"></i> Tipo de Habitación
+                </label>
+                <select id="tipo_id" name="tipo_id" class="form-select" required>
+                    {% for tipo in tipos %}
+                    <option value="{{ tipo.idtipo }}" {% if tipo.idtipo == habitacion.tipos_idtipo %}selected{% endif %}>
+                        {{ tipo.nombre }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="capacidad" class="form-label">
+                    <i class="fas fa-users"></i> Capacidad
+                </label>
+                <input type="number" id="capacidad" name="capacidad" class="form-input"
+                       value="{{ habitacion.capacidad }}" min="1" max="10" required>
+            </div>
+
+            <div class="form-group">
+                <label for="precio" class="form-label">
+                    <i class="fas fa-dollar-sign"></i> Precio por Noche
+                </label>
+                <input type="number" id="precio" name="precio" class="form-input"
+                       value="{{ habitacion.precio }}" min="0" step="1000" required>
+            </div>
+
+            <div class="form-group">
+                <label for="categoria" class="form-label">
+                    <i class="fas fa-tag"></i> Categoría
+                </label>
+                <select id="categoria" name="categoria" class="form-select" required>
+                    {% for cat in categorias %}
+                        <option value="{{ cat.idcategorias }}"
+                                {% if cat.idcategorias == habitacion.categorias_idcategorias %}selected{% endif %}>
+                            {{ cat.nombre }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">
+                    <i class="fas fa-bed"></i> Distribución de Camas
+                </label>
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Tipo de Cama</th>
+                            <th>Capacidad por Cama</th>
+                            <th>Cantidad</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for cama in camas %}
+                        <tr>
+                            <td>{{ cama.nombre }}</td>
+                            <td>{{ cama.capacidad }}</td>
+                            <td>
+                                <input type="number" name="camas[{{ cama.idcamas }}]" min="0"
+                                       value="{{ camas_relacionadas.get(cama.idcamas, 0) }}"
+                                       class="form-input" style="width: 70px;">
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="form-group">
+                <div class="checkbox-item">
+                    <input type="checkbox" id="estado" name="estado" {% if habitacion.estado %}checked{% endif %}>
+                    <label for="estado" class="form-label">
+                        <i class="fas fa-toggle-on"></i> Habitación Disponible
+                    </label>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="fotos" class="form-label">
+                    <i class="fas fa-upload"></i> Subir Nuevas Fotos
+                </label>
+                <input type="file" name="fotos" id="fotos" class="form-input" multiple accept="image/*">
+                <small style="color: var(--text-light);">Puedes subir múltiples imágenes</small>
+            </div>
+
+            <div class="btn-group">
+                <button type="submit" class="btn btn-success">
+                    <i class="fas fa-save"></i> Guardar Cambios
+                </button>
+                <a href="{{ url_for('admin.listar_habitaciones') }}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left"></i> Cancelar
+                </a>
+            </div>
+        </form>
+
+        <!-- 🔻 Formulario de eliminar fotos fuera del <form> principal -->
+        <div class="form-group" style="margin-top: 2rem;">
+            <label class="form-label">
+                <i class="fas fa-images"></i> Fotos actuales de la habitación
+            </label>
+            <div style="display: flex; flex-wrap: wrap; gap: 10px;">
+                {% for foto in habitacion.fotos %}
+                <div style="position: relative;">
+                    <img src="{{ url_for('admin.ver_foto_admin', id=foto.idfotos) }}" alt="Foto {{ loop.index }}"
+                         style="width: 150px; height: 100px; object-fit: cover; border-radius: 8px; border: 1px solid #ccc;">
+                    <form method="POST" action="{{ url_for('admin.eliminar_foto_admin', id=foto.idfotos) }}"
+                          onsubmit="return confirm('¿Estás seguro de que deseas eliminar esta foto?')"
+                          style="position: absolute; top: 5px; right: 5px;">
+                        <button type="submit" class="btn btn-sm btn-danger" style="padding: 2px 6px;">
+                            <i class="fas fa-trash-alt"></i>
+                        </button>
+                    </form>
+                </div>
+                {% endfor %}
+                {% if not habitacion.fotos %}
+                <p style="color: #999;">No hay fotos disponibles.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

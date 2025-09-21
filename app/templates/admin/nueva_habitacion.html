@@ -1,0 +1,329 @@
+{% extends "base.html" %} {% block title %}Nueva Habitación - Hotel Management{%
+endblock %} {% block content %}
+<div class="breadcrumb">
+  <a href="{{ url_for('admin.panel_admin') }}">
+    <i class="fas fa-home"></i> Panel Admin
+  </a>
+  <span> / </span>
+  <a href="{{ url_for('admin.listar_habitaciones') }}">Habitaciones</a>
+  <span> / </span>
+  <span>Nueva Habitación</span>
+</div>
+
+<h1 class="page-title">
+  <i class="fas fa-plus-circle"></i>
+  Registrar Nueva Habitación
+</h1>
+
+<div class="form-container">
+  <div class="card">
+    <div class="card-header">
+      <h2 class="card-title">Información de la Habitación</h2>
+    </div>
+    <form method="POST" enctype="multipart/form-data">
+      <div class="form-group">
+        <label for="tipo_id" class="form-label">
+          <i class="fas fa-door-open"></i>
+          Tipo de Habitación
+        </label>
+        <select name="tipo_id" id="tipo_id" class="form-select" required>
+          <option value="">Seleccione un tipo</option>
+          {% for tipo in tipos %}
+          <option value="{{ tipo.idtipo }}">{{ tipo.nombre }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="capacidad" class="form-label">
+          <i class="fas fa-users"></i>
+          Capacidad
+        </label>
+        <input
+          type="number"
+          name="capacidad"
+          id="capacidad"
+          class="form-input"
+          required
+          min="1"
+          max="10"
+          placeholder="Número de personas"
+        />
+      </div>
+
+      <div class="form-group">
+        <label for="precio" class="form-label">
+          <i class="fas fa-dollar-sign"></i>
+          Precio por Noche
+        </label>
+        <input
+          type="number"
+          name="precio"
+          id="precio"
+          class="form-input"
+          required
+          min="0"
+          step="1000"
+          placeholder="Precio en pesos"
+        />
+      </div>
+
+      <div class="form-group">
+        <label for="categoria" class="form-label">
+          <i class="fas fa-tag"></i>
+          Categoría
+        </label>
+        <select
+          name="categoria"
+          id="categoria"
+          class="form-select"
+          onchange="toggleNuevaCategoria(this.value)"
+        >
+          <option value="">Seleccione una categoría</option>
+          {% for cat in categorias %}
+          <option value="{{ cat.idcategorias }}">{{ cat.nombre }}</option>
+          {% endfor %}
+          <option value="nueva">-- Crear nueva categoría --</option>
+        </select>
+      </div>
+
+      <div id="nueva_categoria_campos" style="display: none">
+        <div class="form-group">
+          <label for="nueva_categoria_nombre" class="form-label">
+            <i class="fas fa-plus"></i>
+            Nombre Nueva Categoría
+          </label>
+          <input
+            type="text"
+            name="nueva_categoria_nombre"
+            id="nueva_categoria_nombre"
+            class="form-input"
+            placeholder="Nombre de la categoría"
+          />
+        </div>
+
+        <div class="form-group">
+          <label for="nueva_categoria_descripcion" class="form-label">
+            <i class="fas fa-align-left"></i>
+            Descripción Nueva Categoría
+          </label>
+          <input
+            type="text"
+            name="nueva_categoria_descripcion"
+            id="nueva_categoria_descripcion"
+            class="form-input"
+            placeholder="Descripción de la categoría"
+          />
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">
+          <i class="fas fa-concierge-bell"></i>
+          Amenidades
+        </label>
+        <div class="checkbox-group">
+          <div class="checkbox-item">
+            <input type="checkbox" name="wifi" id="wifi" />
+            <label for="wifi"><i class="fas fa-wifi"></i> WiFi</label>
+          </div>
+          <div class="checkbox-item">
+            <input
+              type="checkbox"
+              name="aire_acondicionado"
+              id="aire_acondicionado"
+            />
+            <label for="aire_acondicionado"
+              ><i class="fas fa-snowflake"></i> Aire Acondicionado</label
+            >
+          </div>
+          <div class="checkbox-item">
+            <input type="checkbox" name="tv" id="tv" />
+            <label for="tv"><i class="fas fa-tv"></i> Televisión</label>
+          </div>
+          <div class="checkbox-item">
+            <input type="checkbox" name="tina" id="tina" />
+            <label for="tina"><i class="fas fa-bath"></i> Tina</label>
+          </div>
+          <div class="checkbox-item">
+            <input type="checkbox" name="ventilador" id="ventilador" />
+            <label for="ventilador"
+              ><i class="fas fa-fan"></i> Ventilador</label
+            >
+          </div>
+          <div class="checkbox-item">
+            <input type="checkbox" name="bar" id="bar" />
+            <label for="bar"><i class="fas fa-cocktail"></i> Mini Bar</label>
+          </div>
+          <div class="checkbox-item">
+            <input type="checkbox" name="aseo" id="aseo" />
+            <label for="aseo"
+              ><i class="fas fa-toilet-paper"></i> Kit de Aseo</label
+            >
+          </div>
+          <div class="checkbox-item">
+            <input type="checkbox" name="caja_fuerte" id="caja_fuerte" />
+            <label for="caja_fuerte"
+              ><i class="fas fa-lock"></i> Caja Fuerte</label
+            >
+          </div>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">
+          <i class="fas fa-bed"></i>
+          Distribución de Camas
+        </label>
+
+        <table class="table table-striped">
+          <thead>
+            <tr>
+              <th>Tipo de Cama</th>
+              <th>Capacidad por Cama</th>
+              <th>Cantidad</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for cama in camas %}
+            <tr>
+              <td>{{ cama.nombre }}</td>
+              <td>
+                <span class="capacidad-cama" data-cama-id="{{ cama.idcamas }}"
+                  >{{ cama.capacidad }}</span
+                >
+              </td>
+              <td>
+                <input
+                  type="number"
+                  name="camas[{{ cama.idcamas }}]"
+                  min="0"
+                  value="0"
+                  class="form-input cantidad-camas"
+                  style="width: 70px"
+                />
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+
+        <p>
+          <strong>Capacidad de personas indicada:</strong>
+          <span id="capacidad_indicada">0</span> personas
+        </p>
+        <p>
+          <strong>Total personas cubiertas por camas:</strong>
+          <span id="personas_cubiertas">0</span> personas
+        </p>
+        <p id="validacion_camas" style="color: red"></p>
+      </div>
+
+      <div class="form-group">
+        <div class="checkbox-item">
+          <input type="checkbox" id="estado" name="estado" checked />
+          <label for="estado" class="form-label">
+            <i class="fas fa-toggle-on"></i>
+            Habitación Disponible
+          </label>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="fotos" class="form-label">
+          <i class="fas fa-camera"></i>
+          Fotos de la Habitación
+        </label>
+        <input
+          type="file"
+          name="fotos"
+          id="fotos"
+          class="form-input"
+          multiple
+          accept="image/*"
+        />
+        <small style="color: var(--text-light)"
+          >Puedes seleccionar múltiples imágenes</small
+        >
+      </div>
+
+      <div class="btn-group">
+        <button type="submit" class="btn btn-primary">
+          <i class="fas fa-save"></i>
+          Registrar Habitación
+        </button>
+        <a
+          href="{{ url_for('admin.listar_habitaciones') }}"
+          class="btn btn-secondary"
+        >
+          <i class="fas fa-arrow-left"></i>
+          Cancelar
+        </a>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %} {% block scripts %}
+<script>
+  function toggleNuevaCategoria(valor) {
+    const div = document.getElementById("nueva_categoria_campos");
+    if (valor === "nueva") {
+      div.style.display = "block";
+      div.classList.add("slide-in");
+    } else {
+      div.style.display = "none";
+    }
+  }
+</script>
+
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const capacidadInput = document.getElementById("capacidad");
+    const capacidadIndicada = document.getElementById("capacidad_indicada");
+    const personasCubiertas = document.getElementById("personas_cubiertas");
+    const mensajeValidacion = document.getElementById("validacion_camas");
+    const cantidadInputs = document.querySelectorAll(".cantidad-camas");
+
+    function calcularTotal() {
+      let totalCubierto = 0;
+
+      cantidadInputs.forEach((input) => {
+        const fila = input.closest("tr");
+        const capacidad = parseInt(
+          fila.querySelector(".capacidad-cama").innerText.trim()
+        );
+        const cantidad = parseInt(input.value) || 0;
+        totalCubierto += capacidad * cantidad;
+      });
+
+      const capacidadEsperada = parseInt(capacidadInput.value) || 0;
+
+      capacidadIndicada.textContent = capacidadEsperada;
+      personasCubiertas.textContent = totalCubierto;
+
+      if (capacidadEsperada === 0) {
+        mensajeValidacion.textContent =
+          "⚠ Debes ingresar la capacidad de la habitación.";
+        mensajeValidacion.style.color = "red";
+      } else if (totalCubierto === capacidadEsperada) {
+        mensajeValidacion.textContent = "✔ Distribución de camas válida.";
+        mensajeValidacion.style.color = "green";
+      } else if (totalCubierto < capacidadEsperada) {
+        mensajeValidacion.textContent =
+          "⚠ Faltan camas para cubrir la capacidad.";
+        mensajeValidacion.style.color = "red";
+      } else {
+        mensajeValidacion.textContent =
+          "⚠ Exceso de camas (esto puede ser intencional).";
+        mensajeValidacion.style.color = "orange";
+      }
+    }
+
+    capacidadInput.addEventListener("input", calcularTotal);
+    cantidadInputs.forEach((input) =>
+      input.addEventListener("input", calcularTotal)
+    );
+  });
+</script>
+
+{% endblock %}

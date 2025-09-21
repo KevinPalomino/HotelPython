@@ -1,0 +1,71 @@
+{% extends "base.html" %} {% block title %}Habitaciones Inactivas - Hotel
+Management{% endblock %} {% block content %}
+<div class="breadcrumb">
+  <a href="{{ url_for('admin.panel_admin') }}"
+    ><i class="fas fa-home"></i> Panel Admin</a
+  >
+  <span> / Habitaciones Inactivas</span>
+</div>
+
+<h1 class="page-title">
+  <i class="fas fa-bed"></i>
+  Habitaciones Inactivas
+</h1>
+
+<div class="card">
+  <div class="card-header">
+    <div
+      style="display: flex; justify-content: space-between; align-items: center"
+    >
+      <h2 class="card-title">Listado de Habitaciones Inactivas</h2>
+      <a
+        href="{{ url_for('admin.listar_habitaciones') }}"
+        class="btn btn-primary"
+      >
+        <i class="fas fa-arrow-left"></i> Volver a Activas
+      </a>
+    </div>
+  </div>
+
+  {% if habitaciones %}
+  <div class="table-container">
+    <table class="table">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Tipo</th>
+          <th>Capacidad</th>
+          <th>Precio</th>
+          <th>Categoría</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for habitacion in habitaciones %}
+        <tr>
+          <td>{{ habitacion.idhabitaciones }}</td>
+          <td>{{ habitacion.tipo.nombre }}</td>
+          <td>{{ habitacion.capacidad }} personas</td>
+          <td>${{ "{:,.0f}".format(habitacion.precio) }}</td>
+          <td>{{ habitacion.categoria.nombre }}</td>
+          <td>
+            <a
+              href="{{ url_for('admin.activar_habitacion', id=habitacion.idhabitaciones) }}"
+              class="btn btn-success"
+              onclick="return confirm('¿Deseas volver a habilitar esta habitación?')"
+            >
+              <i class="fas fa-undo"></i> Activar
+            </a>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <p style="padding: 1rem; color: gray">
+    No hay habitaciones inactivas por el momento.
+  </p>
+  {% endif %}
+</div>
+{% endblock %}
