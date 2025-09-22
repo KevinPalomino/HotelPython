@@ -11,7 +11,7 @@ def create_app():
 
     # Configuración
     app.config['SECRET_KEY'] = 'supersecreto'
-    app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:@localhost/hotel-python'
+    app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:toor@localhost/hotel-python'
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
     # Inicializar extensiones
