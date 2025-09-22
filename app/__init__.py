@@ -11,7 +11,7 @@ def create_app():
 
     # Configuración
     app.config['SECRET_KEY'] = 'supersecreto'
-    app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:toor@localhost/mydb'
+    app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:@localhost/mydb'   
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
     # Inicializar extensiones
@@ -29,16 +29,20 @@ def create_app():
     @login_manager.user_loader
     def load_user(user_id):
         return Persona.query.get(int(user_id))
-
-    # Registrar Blueprints
+    
     from app.routes.auth_routes import auth_bp
     from app.routes.cliente_routes import cliente_bp
     from app.routes.admin_routes import admin_bp
-
+    from app.routes.recepcion_routes import recepcion_bp
+    from app.routes.ventas import ventas_bp
+  # 👈 importa el blueprint de ventas
+    
+    # Registrar blueprints
     app.register_blueprint(auth_bp, url_prefix='/auth')
     app.register_blueprint(cliente_bp)
     app.register_blueprint(admin_bp)
     app.register_blueprint(recepcion_bp)
+    app.register_blueprint(ventas_bp)  # 👈 registra el blueprint
 
     return app
 

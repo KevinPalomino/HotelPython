@@ -180,3 +180,10 @@ class Consumo(db.Model):
 
     detalle_reserva = db.relationship(
         'DetalleReserva', backref='consumos', lazy=True)
+class Ventas(db.Model):
+    __tablename__ = 'ventas'
+    id_ventas = db.Column(db.Integer, primary_key=True)
+    fecha = db.Column(db.DateTime)
+    cantidad = db.Column(db.Integer)
+    precio = db.Column(db.Float)
+    id_inventario = db.Column(db.Integer, db.ForeignKey('inventario.id_inventario'))
