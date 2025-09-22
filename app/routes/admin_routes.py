@@ -9,21 +9,24 @@ from collections import Counter
 admin_bp = Blueprint('admin', __name__)
 
 # CONSTANTES PARA ESTADOS DE HABITACIÓN
+
+
 class EstadosHabitacion:
     DISPONIBLE = 'disponible'
     OCUPADA = 'ocupada'
     MANTENIMIENTO = 'mantenimiento'
     INACTIVA = 'inactiva'
-    
+
     @classmethod
     def todas_activas(cls):
         """Retorna todos los estados que representan habitaciones activas"""
         return [cls.DISPONIBLE, cls.OCUPADA, cls.MANTENIMIENTO]
-    
+
     @classmethod
     def disponibles_para_admin(cls):
         """Estados que el admin considera como habitaciones disponibles para gestión"""
         return [cls.DISPONIBLE, cls.OCUPADA, cls.MANTENIMIENTO]
+
 
 @admin_bp.route('/panel')
 @login_required
@@ -32,6 +35,7 @@ def panel_admin():
         flash('Acceso no autorizado', 'danger')
         return redirect(url_for('auth.login'))
     return render_template('admin/panel_admin.html')
+
 
 @admin_bp.route('/admin/habitaciones/nueva', methods=['GET', 'POST'])
 @login_required
@@ -115,6 +119,7 @@ def nueva_habitacion():
 
     return render_template('admin/nueva_habitacion.html', categorias=categorias, camas=camas, tipos=tipos)
 
+
 @admin_bp.route('/admin/habitaciones')
 @login_required
 def listar_habitaciones():
@@ -125,8 +130,9 @@ def listar_habitaciones():
     habitaciones = Habitacion.query.filter(
         Habitacion.estado.in_(EstadosHabitacion.disponibles_para_admin())
     ).all()
-    
+
     return render_template('admin/listar_habitaciones.html', habitaciones=habitaciones)
+
 
 @admin_bp.route('/admin/habitaciones/editar/<int:id>', methods=['GET', 'POST'])
 @login_required
@@ -144,13 +150,13 @@ def editar_habitacion(id):
         habitacion.tipos_idtipo = int(request.form['tipo_id'])
         habitacion.capacidad = int(request.form['capacidad'])
         habitacion.precio = int(request.form['precio'])
-        
+
         if 'estado' in request.form:
             if habitacion.estado == EstadosHabitacion.INACTIVA:
                 habitacion.estado = EstadosHabitacion.DISPONIBLE
         else:
             habitacion.estado = EstadosHabitacion.INACTIVA
-            
+
         habitacion.categorias_idcategorias = int(request.form['categoria'])
 
         habitacion.ventilador = 'ventilador' in request.form
@@ -199,6 +205,7 @@ def editar_habitacion(id):
                            tipos=tipos,
                            camas_relacionadas=camas_relacionadas)
 
+
 @admin_bp.route('/admin/foto/<int:id>')
 @login_required
 def ver_foto_admin(id):
@@ -207,6 +214,7 @@ def ver_foto_admin(id):
         io.BytesIO(foto.fotos),
         mimetype='image/jpeg'
     )
+
 
 @admin_bp.route('/admin/foto/eliminar/<int:id>', methods=['POST'])
 @login_required
@@ -220,6 +228,7 @@ def eliminar_foto_admin(id):
     flash('Foto eliminada correctamente.', 'info')
     return redirect(url_for('admin.editar_habitacion', id=habitacion_id))
 
+
 @admin_bp.route('/admin/habitaciones/eliminar/<int:id>')
 @login_required
 def eliminar_habitacion(id):
@@ -229,6 +238,7 @@ def eliminar_habitacion(id):
     flash('Habitación marcada como inactiva.', 'info')
     return redirect(url_for('admin.listar_habitaciones'))
 
+
 @admin_bp.route('/admin/habitaciones/inactivas')
 @login_required
 def habitaciones_inactivas():
@@ -236,8 +246,10 @@ def habitaciones_inactivas():
         flash('Acceso no autorizado', 'danger')
         return redirect(url_for('auth.login'))
 
-    habitaciones = Habitacion.query.filter_by(estado=EstadosHabitacion.INACTIVA).all()
+    habitaciones = Habitacion.query.filter_by(
+        estado=EstadosHabitacion.INACTIVA).all()
     return render_template('admin/habitaciones_inactivas.html', habitaciones=habitaciones)
+
 
 @admin_bp.route('/admin/habitaciones/activar/<int:id>')
 @login_required
@@ -247,6 +259,7 @@ def activar_habitacion(id):
     db.session.commit()
     flash('Habitación habilitada nuevamente.', 'success')
     return redirect(url_for('admin.habitaciones_inactivas'))
+
 
 @admin_bp.route('/admin/reservas')
 @login_required
@@ -258,6 +271,7 @@ def ver_reservas():
     reservas = Reserva.query.all()
     return render_template('admin/reservas.html', reservas=reservas)
 
+
 @admin_bp.route('/admin/inventario')
 @login_required
 def ver_inventario():
@@ -267,6 +281,7 @@ def ver_inventario():
 
     productos = Inventario.query.all()
     return render_template('admin/inventario_listar.html', productos=productos)
+
 
 @admin_bp.route('/admin/inventario/nuevo', methods=['GET', 'POST'])
 @login_required
@@ -306,6 +321,7 @@ def nuevo_producto():
 
     return render_template("admin/inventario_nuevo.html", categorias=categorias)
 
+
 @admin_bp.route('/admin/inventario/editar/<int:id>', methods=['GET', 'POST'])
 @login_required
 def editar_producto(id):
@@ -328,6 +344,7 @@ def editar_producto(id):
 
     return render_template('admin/inventario_editar.html', producto=producto)
 
+
 @admin_bp.route('/admin/inventario/eliminar/<int:id>')
 @login_required
 def eliminar_producto(id):
@@ -341,6 +358,7 @@ def eliminar_producto(id):
     flash("Producto eliminado correctamente", "info")
     return redirect(url_for('admin.ver_inventario'))
 
+
 @admin_bp.route('/admin/personal')
 @login_required
 def ver_personal():
@@ -350,6 +368,7 @@ def ver_personal():
 
     empleados = Persona.query.all()
     return render_template('admin/personal_listar.html', empleados=empleados)
+
 
 @admin_bp.route('/admin/personal/nuevo', methods=['GET', 'POST'])
 @login_required
@@ -385,6 +404,7 @@ def nuevo_empleado():
 
     return render_template('admin/personal_nuevo.html', roles=roles)
 
+
 @admin_bp.route('/admin/personal/editar/<int:cedula>', methods=['GET', 'POST'])
 @login_required
 def editar_empleado(cedula):
@@ -408,6 +428,7 @@ def editar_empleado(cedula):
 
     return render_template('admin/personal_editar.html', persona=persona, roles=roles)
 
+
 @admin_bp.route('/admin/personal/eliminar/<int:cedula>')
 @login_required
 def eliminar_empleado(cedula):
@@ -415,16 +436,18 @@ def eliminar_empleado(cedula):
         flash('Acceso denegado', 'danger')
         return redirect(url_for('auth.login'))
 
-    persona = Persona.query.get_or_404(cedula)
+    cliente = Cliente.query.filter_by(personas_cedula=cedula).first_or_404()
 
-    if persona.cedula == current_user.cedula:
-        flash('No puedes eliminar tu propio usuario', 'warning')
+    if cliente.personas_cedula == current_user.cedula:
+        flash('No puedes inhabilitar tu propio usuario', 'warning')
         return redirect(url_for('admin.ver_personal'))
 
-    db.session.delete(persona)
+    cliente.estado = 0   # 👈 marcar como inactivo
     db.session.commit()
-    flash('Empleado eliminado correctamente.', 'info')
+
+    flash('Empleado inhabilitado correctamente.', 'info')
     return redirect(url_for('admin.ver_personal'))
+
 
 @admin_bp.app_template_filter('estado_habitacion_admin')
 def estado_habitacion_admin_filter(estado):
