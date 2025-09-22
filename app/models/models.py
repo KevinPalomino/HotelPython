@@ -186,4 +186,7 @@ class Ventas(db.Model):
     fecha = db.Column(db.DateTime)
     cantidad = db.Column(db.Integer)
     precio = db.Column(db.Float)
-    id_inventario = db.Column(db.Integer, db.ForeignKey('inventario.id_inventario'))
+    id_inventario = db.Column(db.Integer, db.ForeignKey('inventario.idinventario'))
+
+    inventario = db.relationship('Inventario', backref='ventas', lazy=True)
+

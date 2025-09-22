@@ -1,41 +1,51 @@
+# app/routes/ventas.py
 from flask import Blueprint, render_template, request, redirect, url_for, flash
-from app.extensions import db
 from app.models.models import Inventario, Ventas
+from app.extensions import db
 from datetime import datetime
 
-# Registrar el Blueprint
-ventas_bp = Blueprint('ventas', __name__, url_prefix='/ventas')
+ventas_bp = Blueprint("ventas", __name__, url_prefix="/ventas")
 
 @ventas_bp.route("/", methods=["GET", "POST"])
 def ventas():
-    productos = Inventario.query.all()
-
     if request.method == "POST":
-        producto_id = request.form["producto_id"]
-        cantidad_vendida = int(request.form["cantidad"])
+        try:
+            producto_id = request.form.get("producto_id")   # viene del select
+            cantidad_vendida = int(request.form.get("cantidad"))
 
-        producto = Inventario.query.get(producto_id)
+            # Buscar producto en inventario
+            producto = Inventario.query.get(producto_id)
+            if not producto:
+                flash("❌ Producto no encontrado.", "danger")
+                return redirect(url_for("ventas.ventas"))
 
-        if not producto:
-            flash("Producto no encontrado.", "danger")
-        elif cantidad_vendida > producto.cantidad:
-            flash("No hay suficiente stock para esta venta.", "danger")
-        else:
-            # Crear registro de venta
+            # Verificar stock
+            if producto.cantidad < cantidad_vendida:
+                flash("⚠️ No hay suficiente stock disponible.", "warning")
+                return redirect(url_for("ventas.ventas"))
+
+            # Registrar venta
             nueva_venta = Ventas(
                 fecha=datetime.now(),
                 cantidad=cantidad_vendida,
                 precio=producto.precio,
-                id_inventario=producto.id_inventario
+                id_inventario=producto.idinventario  # ✅ aquí estaba el error
             )
             db.session.add(nueva_venta)
 
-            # Actualizar inventario
+            # Actualizar stock
             producto.cantidad -= cantidad_vendida
             db.session.commit()
 
-            flash("Venta registrada con éxito.", "success")
-            return redirect(url_for('ventas.ventas'))
+            flash("✅ Venta registrada con éxito.", "success")
+            return redirect(url_for("ventas.ventas"))
 
-    return render_template("admin/ventas.html", productos=productos)
+        except Exception as e:
+            db.session.rollback()
+            flash(f"❌ Error al registrar la venta: {str(e)}", "danger")
+            return redirect(url_for("ventas.ventas"))
 
+    # Si es GET: mostrar productos y ventas
+    productos = Inventario.query.all()
+    ventas = Ventas.query.all()
+    return render_template("admin/ventas.html", productos=productos, ventas=ventas)
