@@ -12,9 +12,12 @@ def inicio():
     return redirect(url_for('cliente.ver_habitaciones'))
 
 
+# Ruta para mostrar las habitaciones disponibles al cliente.
+# Se consultan únicamente las habitaciones cuyo estado sea "disponible"
+# y se envían al template 'cliente/habitaciones.html' para ser renderizadas.
 @cliente_bp.route('/habitaciones')
 def ver_habitaciones():
-    habitaciones = Habitacion.query.filter_by(estado=True).all()
+    habitaciones = Habitacion.query.filter_by(estado="disponible").all()
     return render_template('cliente/habitaciones.html', habitaciones=habitaciones)
 
 

@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+
+{% block title %}Confirmar Check-in - Hotel Management{% endblock %}
+
+{% block content %}
+
+<div class="breadcrumb">
+    <a href="{{ url_for('recepcion.panel_recepcionista') }}">
+        <i class="fas fa-concierge-bell"></i> Panel Recepción
+    </a>
+    <span> / </span>
+    <a href="{{ url_for('recepcion.ver_reservas_checkin') }}">
+        <i class="fas fa-sign-in-alt"></i> Check-in
+    </a>
+    <span> / Confirmar Check-in</span>
+</div>
+
+<h1 class="page-title">
+    <i class="fas fa-sign-in-alt"></i>
+    Confirmar Check-In
+</h1>
+
+<div class="card">
+    <div class="card-header">
+        <h2 class="card-title">Información de la Reserva</h2>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-6">
+                <h5><i class="fas fa-user"></i> Información del Cliente</h5>
+                <p><strong>Nombre:</strong> {{ cliente.nombre }}</p>
+                <p><strong>Cédula:</strong> {{ cliente.cedula }}</p>
+                <p><strong>Teléfono:</strong> {{ cliente.telefono }}</p>
+                <p><strong>Email:</strong> {{ cliente.correo }}</p>
+            </div>
+            <div class="col-md-6">
+                <h5><i class="fas fa-bed"></i> Información de la Habitación</h5>
+                <p><strong>Habitación:</strong> {{ habitacion.idhabitaciones }}</p>
+                <p><strong>Tipo:</strong> {{ habitacion.tipo }}</p>
+                <p><strong>Estado Actual:</strong> {{ habitacion.estado }}</p>
+            </div>
+        </div>
+        
+        <hr>
+        
+        <div class="row">
+            <div class="col-md-12">
+                <h5><i class="fas fa-calendar-alt"></i> Información de la Reserva</h5>
+                <div class="row">
+                    <div class="col-md-3">
+                        <p><strong>Fecha de Entrada:</strong><br>{{ reserva.checkin.strftime('%Y-%m-%d') }}</p>
+                    </div>
+                    <div class="col-md-3">
+                        <p><strong>Fecha de Salida:</strong><br>{{ reserva.checkout.strftime('%Y-%m-%d') }}</p>
+                    </div>
+                    <div class="col-md-3">
+                        <p><strong>Abono:</strong><br>${{ "{:,.0f}".format(reserva.abono) }}</p>
+                    </div>
+                    <div class="col-md-3">
+                        <p><strong>Estado:</strong><br>
+                            <span class="status-badge status-pending">Pendiente</span>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card mt-4">
+    <div class="card-body text-center">
+        <h5 class="mb-4">¿Confirma el check-in para este huésped?</h5>
+        
+        <form method="POST" style="display: inline-block;">
+            <button type="submit" class="btn btn-success btn-lg mr-3">
+                <i class="fas fa-check"></i> Confirmar Check-in
+            </button>
+        </form>
+        
+        <a href="{{ url_for('recepcion.ver_reservas_checkin') }}" class="btn btn-secondary btn-lg">
+            <i class="fas fa-times"></i> Cancelar
+        </a>
+    </div>
+</div>
+
+<style>
+.status-badge {
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 0.85em;
+    font-weight: bold;
+}
+
+.status-pending {
+    background-color: #ffc107;
+    color: #212529;
+}
+
+.card-title {
+    margin: 0;
+    font-size: 1.25rem;
+}
+</style>
+
+{% endblock %}

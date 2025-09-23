@@ -12,12 +12,26 @@
 
 <h1 class="page-title">
     <i class="fas fa-sign-out-alt"></i>
-    Check-Out del Día
+    Check-Out
 </h1>
+
+<!-- Formulario de filtro por fecha -->
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="GET" action="{{ url_for('recepcion.ver_reservas_checkout') }}" class="form-inline">
+            <div class="form-group mr-2 mb-0">
+                <label for="fecha" class="mr-2">Filtrar por fecha:</label>
+                <input type="date" id="fecha" name="fecha" class="form-control" value="{{ fecha_filtro }}" min="{{ hoy }}">
+            </div>
+            <button type="submit" class="btn btn-primary"><i class="fas fa-filter"></i> Filtrar</button>
+            <a href="{{ url_for('recepcion.ver_reservas_checkout') }}" class="btn btn-secondary ml-2"><i class="fas fa-broom"></i> Limpiar</a>
+        </form>
+    </div>
+</div>
 
 <div class="card">
     <div class="card-header">
-        <h2 class="card-title">Check-outs Programados</h2>
+        <h2 class="card-title">Check-outs Programados para el {{ fecha_filtro }}</h2>
     </div>
 
     {% if reservas %}
@@ -27,6 +41,7 @@
                 <tr>
                     <th><i class="fas fa-user"></i> Cliente</th>
                     <th><i class="fas fa-bed"></i> Habitación</th>
+                    <th><i class="fas fa-home"></i> Tipo</th>
                     <th><i class="fas fa-calendar-alt"></i> Fecha Ingreso</th>
                     <th><i class="fas fa-calendar-alt"></i> Fecha Salida</th>
                     <th><i class="fas fa-info-circle"></i> Estado</th>
@@ -34,17 +49,18 @@
                 </tr>
             </thead>
             <tbody>
-                {% for r in reservas %}
+                {% for r, h, p in reservas %}
                 <tr>
-                    <td>{{ r.cliente.nombre }}</td>
-                    <td>{{ r.habitacion.tipo }}</td>
-                    <td>{{ r.fecha_ingreso }}</td>
-                    <td>{{ r.fecha_salida }}</td>
+                    <td>{{ p.nombre }}</td>
+                    <td>Habitación {{ h.idhabitaciones }}</td>
+                    <td>{{ h.tipo }}</td>
+                    <td>{{ r.checkin.strftime('%Y-%m-%d') }}</td>
+                    <td>{{ r.checkout.strftime('%Y-%m-%d') }}</td>
                     <td>
-                        <span class="status-badge status-active">{{ r.estado }}</span>
+                        <span class="status-badge status-active">En Curso</span>
                     </td>
                     <td class="actions">
-                        <a href="#" class="btn btn-warning">
+                        <a href="{{ url_for('recepcion.hacer_checkout', reserva_id=r.idreservas) }}" class="btn btn-warning">
                             <i class="fas fa-sign-out-alt"></i>
                             Hacer Check-out
                         </a>
@@ -57,8 +73,23 @@
     {% else %}
     <div class="text-center p-3">
         <i class="fas fa-info-circle" style="font-size: 3rem; color: var(--text-light); margin-bottom: 1rem;"></i>
-        <p style="color: var(--text-light); font-size: 1.1rem;">No hay check-outs programados para hoy.</p>
+        <p style="color: var(--text-light); font-size: 1.1rem;">No hay check-outs programados para la fecha seleccionada.</p>
     </div>
     {% endif %}
 </div>
+
+<style>
+.status-active {
+    background-color: #28a745;
+    color: white;
+}
+
+.status-badge {
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 0.85em;
+    font-weight: bold;
+}
+</style>
+
 {% endblock %}
