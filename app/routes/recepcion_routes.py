@@ -8,6 +8,8 @@ from app.models.models import Habitacion, Persona, Reserva, Rol, DetalleReserva,
 recepcion_bp = Blueprint('recepcion', __name__)
 
 # *** FUNCIÓN HELPER PARA CONVERTIR ESTADOS DE HABITACIÓN ***
+
+
 def get_estado_habitacion_texto(estado):
     """
     Convierte el estado de habitación a texto legible
@@ -20,17 +22,20 @@ def get_estado_habitacion_texto(estado):
     }
     return estados_map.get(estado, f'Estado: {estado}')
 
+
 def es_habitacion_disponible(habitacion):
     """
     Verifica si una habitación está disponible
     """
     return habitacion.estado == 'disponible'
 
+
 def es_habitacion_ocupada(habitacion):
     """
     Verifica si una habitación está ocupada
     """
     return habitacion.estado == 'ocupada'
+
 
 @recepcion_bp.route('/recepcion')
 @login_required
@@ -39,6 +44,7 @@ def panel_recepcionista():
         flash('Acceso no autorizado', 'danger')
         return redirect(url_for('auth.login'))
     return render_template('recepcion/panel.html')
+
 
 @recepcion_bp.route('/recepcion/checkin')
 @login_required
@@ -49,19 +55,19 @@ def ver_reservas_checkin():
 
     fecha_filtro_str = request.args.get('fecha')
     hoy = date.today()
-    
+
     # Marcar como canceladas las reservas vencidas (check-in < hoy y estado = 0)
     reservas_vencidas = db.session.query(Reserva).filter(
         Reserva.estado == 0,  # Pendiente
         Reserva.checkin < hoy
     ).all()
-    
+
     for reserva in reservas_vencidas:
         reserva.estado = 3  # 3 = Cancelada automáticamente
-    
+
     if reservas_vencidas:
         db.session.commit()
-    
+
     # Query base que une las tablas necesarias (solo reservas pendientes no vencidas)
     query = db.session.query(Reserva, Habitacion, Persona).join(
         DetalleReserva, Reserva.idreservas == DetalleReserva.reservas_idreservas
@@ -80,20 +86,23 @@ def ver_reservas_checkin():
     fecha_filtro = None
     if fecha_filtro_str:
         try:
-            fecha_filtro = datetime.strptime(fecha_filtro_str, '%Y-%m-%d').date()
+            fecha_filtro = datetime.strptime(
+                fecha_filtro_str, '%Y-%m-%d').date()
             query = query.filter(Reserva.checkin == fecha_filtro)
         except ValueError:
             flash('Formato de fecha inválido.', 'warning')
     # Si no hay filtro de fecha, mostrar todas las reservas pendientes válidas
 
     reservas_info = query.order_by(Reserva.checkin.asc()).all()
-    
-    fecha_filtro_display = "todas" if not fecha_filtro_str else (fecha_filtro.strftime('%Y-%m-%d') if fecha_filtro else hoy.strftime('%Y-%m-%d'))
-    
-    return render_template('recepcion/checkin.html', 
-                           reservas=reservas_info, 
+
+    fecha_filtro_display = "todas" if not fecha_filtro_str else (
+        fecha_filtro.strftime('%Y-%m-%d') if fecha_filtro else hoy.strftime('%Y-%m-%d'))
+
+    return render_template('recepcion/checkin.html',
+                           reservas=reservas_info,
                            fecha_filtro=fecha_filtro_display,
                            hoy=hoy.strftime('%Y-%m-%d'))
+
 
 @recepcion_bp.route('/recepcion/checkin/<int:reserva_id>', methods=['GET', 'POST'])
 @login_required
@@ -122,18 +131,20 @@ def hacer_checkin(reserva_id):
         try:
             reserva.estado = 1
             habitacion.estado = 'ocupada'
-            
+
             db.session.commit()
-            flash(f'Check-in para {persona.nombre} en la habitación {habitacion.idhabitaciones} realizado con éxito.', 'success')
+            flash(
+                f'Check-in para {persona.nombre} en la habitación {habitacion.idhabitaciones} realizado con éxito.', 'success')
             return redirect(url_for('recepcion.ver_reservas_checkin'))
         except Exception as e:
             db.session.rollback()
             flash(f'Error al procesar el check-in: {str(e)}', 'danger')
-    
-    return render_template('recepcion/hacer_checkin.html', 
-                           reserva=reserva, 
-                           habitacion=habitacion, 
+
+    return render_template('recepcion/hacer_checkin.html',
+                           reserva=reserva,
+                           habitacion=habitacion,
                            cliente=persona)
+
 
 @recepcion_bp.route('/recepcion/reservas-canceladas')
 @login_required
@@ -141,9 +152,9 @@ def ver_reservas_canceladas():
     if current_user.rol.nombre != 'Recepcionista':
         flash('Acceso no autorizado', 'danger')
         return redirect(url_for('auth.login'))
-    
+
     hoy = date.today()
-    
+
     reservas_canceladas = db.session.query(Reserva, Habitacion, Persona).join(
         DetalleReserva, Reserva.idreservas == DetalleReserva.reservas_idreservas
     ).join(
@@ -155,10 +166,11 @@ def ver_reservas_canceladas():
     ).filter(
         Reserva.estado == 3  # Estado 3 = Cancelada
     ).order_by(Reserva.checkin.desc()).all()
-    
-    return render_template('recepcion/reservas_canceladas.html', 
+
+    return render_template('recepcion/reservas_canceladas.html',
                            reservas=reservas_canceladas,
                            hoy=hoy.strftime('%Y-%m-%d'))
+
 
 @recepcion_bp.route('/recepcion/cancelar-reserva/<int:reserva_id>', methods=['POST'])
 @login_required
@@ -166,28 +178,29 @@ def cancelar_reserva(reserva_id):
     if current_user.rol.nombre != 'Recepcionista':
         flash('Acceso no autorizado', 'danger')
         return redirect(url_for('auth.login'))
-    
+
     try:
         reserva = Reserva.query.get_or_404(reserva_id)
         razon = request.form.get('razon', '').strip()
-        
+
         if not razon:
             flash('Debe proporcionar una razón para la cancelación.', 'danger')
             return redirect(url_for('recepcion.ver_reservas_checkin'))
-        
+
         if reserva.estado != 0:
             flash('Solo se pueden cancelar reservas pendientes.', 'warning')
             return redirect(url_for('recepcion.ver_reservas_checkin'))
-        
+
         reserva.estado = 3  # 3 = Cancelada manualmente
         db.session.commit()
         flash(f'Reserva cancelada exitosamente. Razón: {razon}', 'info')
-        
+
     except Exception as e:
         db.session.rollback()
         flash(f'Error al cancelar la reserva: {str(e)}', 'danger')
-    
+
     return redirect(url_for('recepcion.ver_reservas_checkin'))
+
 
 @recepcion_bp.route('/recepcion/checkin-directo', methods=['GET', 'POST'])
 @login_required
@@ -206,13 +219,15 @@ def checkin_directo():
             comentario = request.form.get('comentario', '').strip()
 
             if not cliente_cedula or not habitacion_ids or not checkout_str:
-                flash('Debe seleccionar un cliente, al menos una habitación y una fecha de checkout.', 'danger')
+                flash(
+                    'Debe seleccionar un cliente, al menos una habitación y una fecha de checkout.', 'danger')
                 return redirect(request.url)
 
             habitacion_ids = [int(id) for id in habitacion_ids]
 
             try:
-                checkout_date = datetime.strptime(checkout_str, '%Y-%m-%d').date()
+                checkout_date = datetime.strptime(
+                    checkout_str, '%Y-%m-%d').date()
             except ValueError:
                 flash('Formato de fecha de checkout inválido.', 'danger')
                 return redirect(request.url)
@@ -226,11 +241,12 @@ def checkin_directo():
                 flash('Cliente no encontrado.', 'danger')
                 return redirect(request.url)
 
-            cliente = Cliente.query.filter_by(personas_cedula=cliente_cedula).first()
+            cliente = Cliente.query.filter_by(
+                personas_cedula=cliente_cedula).first()
             if not cliente:
                 cliente = Cliente(
-                    personas_cedula=cliente_cedula, 
-                    departamento='', 
+                    personas_cedula=cliente_cedula,
+                    departamento='',
                     ciudad=''
                 )
                 db.session.add(cliente)
@@ -238,15 +254,17 @@ def checkin_directo():
 
             habitaciones_validas = []
             for hab_id in habitacion_ids:
-                habitacion = Habitacion.query.filter_by(idhabitaciones=hab_id).first()
+                habitacion = Habitacion.query.filter_by(
+                    idhabitaciones=hab_id).first()
                 if not habitacion:
                     flash(f'La habitación ID {hab_id} no existe.', 'danger')
                     return redirect(request.url)
-                
+
                 if not es_habitacion_disponible(habitacion):
-                    flash(f'La habitación ID {hab_id} no está disponible.', 'danger')
+                    flash(
+                        f'La habitación ID {hab_id} no está disponible.', 'danger')
                     return redirect(request.url)
-                
+
                 habitaciones_validas.append(habitacion)
 
             for hab_id in habitacion_ids:
@@ -258,7 +276,8 @@ def checkin_directo():
                 ).first()
 
                 if reservas_conflicto:
-                    flash(f'La habitación ID {hab_id} ya está reservada en esas fechas.', 'danger')
+                    flash(
+                        f'La habitación ID {hab_id} ya está reservada en esas fechas.', 'danger')
                     return redirect(request.url)
 
             nueva_reserva = Reserva(
@@ -280,10 +299,12 @@ def checkin_directo():
                 habitacion.estado = 'ocupada'
 
             db.session.commit()
-            
-            habitaciones_texto = ', '.join([str(h.idhabitaciones) for h in habitaciones_validas])
-            flash(f'Check-in directo realizado con éxito para {persona.nombre} en las habitaciones: {habitaciones_texto}.', 'success')
-            
+
+            habitaciones_texto = ', '.join(
+                [str(h.idhabitaciones) for h in habitaciones_validas])
+            flash(
+                f'Check-in directo realizado con éxito para {persona.nombre} en las habitaciones: {habitaciones_texto}.', 'success')
+
             return redirect(url_for('recepcion.panel_recepcionista'))
 
         except Exception as e:
@@ -293,10 +314,10 @@ def checkin_directo():
 
     hoy = date.today()
     manana = hoy + timedelta(days=1)
-    
+
     todas_habitaciones = Habitacion.query.all()
     habitaciones_disponibles_hoy = []
-    
+
     for habitacion in todas_habitaciones:
         if es_habitacion_disponible(habitacion):
             reservas_conflicto = db.session.query(Reserva).join(DetalleReserva).filter(
@@ -305,15 +326,17 @@ def checkin_directo():
                 Reserva.checkin <= hoy,
                 Reserva.checkout > hoy
             ).first()
-            
+
             if not reservas_conflicto:
-                habitacion.estado_texto = get_estado_habitacion_texto(habitacion.estado)
+                habitacion.estado_texto = get_estado_habitacion_texto(
+                    habitacion.estado)
                 habitaciones_disponibles_hoy.append(habitacion)
-    
+
     return render_template('recepcion/checkin_directo.html',
                            habitaciones=habitaciones_disponibles_hoy,
                            hoy=hoy.strftime('%Y-%m-%d'),
                            manana=manana.strftime('%Y-%m-%d'))
+
 
 @recepcion_bp.route('/recepcion/checkout')
 @login_required
@@ -321,10 +344,12 @@ def ver_reservas_checkout():
     if current_user.rol.nombre != 'Recepcionista':
         flash('Acceso no autorizado', 'danger')
         return redirect(url_for('auth.login'))
-    
-    fecha_filtro_str = request.args.get('fecha')
+
     hoy = date.today()
-    
+    fecha_filtro_str = request.args.get('fecha')
+    nombre_filtro = request.args.get('nombre')  # 👈 Nuevo campo
+
+    # Traemos TODAS las reservas en curso
     query = db.session.query(Reserva, Habitacion, Persona).join(
         DetalleReserva, Reserva.idreservas == DetalleReserva.reservas_idreservas
     ).join(
@@ -337,26 +362,34 @@ def ver_reservas_checkout():
         Reserva.estado == 1
     )
 
+    # Filtro por fecha (opcional)
     fecha_filtro = None
     if fecha_filtro_str:
         try:
-            fecha_filtro = datetime.strptime(fecha_filtro_str, '%Y-%m-%d').date()
+            fecha_filtro = datetime.strptime(
+                fecha_filtro_str, '%Y-%m-%d').date()
             if fecha_filtro < hoy:
-                flash('No se pueden consultar fechas pasadas. Mostrando check-outs para hoy.', 'warning')
-                fecha_filtro = hoy
+                flash('No se pueden consultar fechas pasadas.', 'warning')
+            else:
+                query = query.filter(Reserva.checkout == fecha_filtro)
         except ValueError:
-            flash('Formato de fecha inválido. Mostrando check-outs para hoy.', 'warning')
-            fecha_filtro = hoy
-    else:
-        fecha_filtro = hoy
+            flash(
+                'Formato de fecha inválido, mostrando todos los check-outs pendientes.', 'warning')
 
-    query = query.filter(Reserva.checkout == fecha_filtro)
+    # Filtro por nombre (opcional)
+    if nombre_filtro:
+        query = query.filter(Persona.nombre.ilike(f"%{nombre_filtro}%"))
+
     reservas_info = query.all()
-    
-    return render_template('recepcion/checkout.html', 
-                           reservas=reservas_info, 
-                           fecha_filtro=fecha_filtro.strftime('%Y-%m-%d'),
-                           hoy=hoy.strftime('%Y-%m-%d'))
+
+    return render_template(
+        'recepcion/checkout.html',
+        reservas=reservas_info,
+        fecha_filtro=fecha_filtro_str or "",
+        nombre_filtro=nombre_filtro or "",
+        hoy=hoy.strftime('%Y-%m-%d')
+    )
+
 
 @recepcion_bp.route('/recepcion/checkout/<int:reserva_id>', methods=['GET', 'POST'])
 @login_required
@@ -385,18 +418,20 @@ def hacer_checkout(reserva_id):
         try:
             reserva.estado = 2
             habitacion.estado = 'disponible'
-            
+
             db.session.commit()
-            flash(f'Check-out para {persona.nombre} de la habitación {habitacion.idhabitaciones} realizado con éxito.', 'success')
+            flash(
+                f'Check-out para {persona.nombre} de la habitación {habitacion.idhabitaciones} realizado con éxito.', 'success')
             return redirect(url_for('recepcion.ver_reservas_checkout'))
         except Exception as e:
             db.session.rollback()
             flash(f'Error al procesar el check-out: {str(e)}', 'danger')
-    
-    return render_template('recepcion/hacer_checkout.html', 
-                           reserva=reserva, 
-                           habitacion=habitacion, 
+
+    return render_template('recepcion/hacer_checkout.html',
+                           reserva=reserva,
+                           habitacion=habitacion,
                            cliente=persona)
+
 
 @recepcion_bp.route('/recepcion/cliente/nuevo', methods=['GET', 'POST'])
 @login_required
@@ -413,7 +448,7 @@ def registrar_cliente():
         correo = request.form['correo']
         telefono = request.form['telefono']
         direccion = request.form['direccion']
-        
+
         if Persona.query.filter_by(cedula=cedula).first():
             flash('Ya existe una persona registrada con esa cédula.', 'danger')
             return render_template('recepcion/registrar_cliente.html', next_url=next_url)
@@ -433,10 +468,11 @@ def registrar_cliente():
 
         if next_url:
             return redirect(f"{next_url}?cliente_cedula={cedula}")
-        
+
         return redirect(url_for('recepcion.panel_recepcionista'))
 
     return render_template('recepcion/registrar_cliente.html', next_url=next_url)
+
 
 @recepcion_bp.route('/recepcion/reserva/nueva', methods=['GET', 'POST'])
 @login_required
@@ -454,9 +490,10 @@ def nueva_reserva():
             abono = request.form.get('abono', 0)
 
             if not all([cliente_cedula, habitacion_ids, checkin_str, checkout_str]):
-                flash('Todos los campos son obligatorios: cliente, fechas y al menos una habitación.', 'danger')
+                flash(
+                    'Todos los campos son obligatorios: cliente, fechas y al menos una habitación.', 'danger')
                 return redirect(request.url)
-            
+
             habitacion_ids = [int(id) for id in habitacion_ids]
 
             checkin_date = datetime.strptime(checkin_str, '%Y-%m-%d').date()
@@ -466,11 +503,14 @@ def nueva_reserva():
                 flash('La fecha de salida debe ser posterior a la de entrada.', 'danger')
                 return redirect(request.url)
 
-            cliente_obj = Cliente.query.join(Persona).filter(Persona.cedula == cliente_cedula).first()
+            cliente_obj = Cliente.query.join(Persona).filter(
+                Persona.cedula == cliente_cedula).first()
             if not cliente_obj:
-                persona = Persona.query.filter_by(cedula=cliente_cedula).first()
+                persona = Persona.query.filter_by(
+                    cedula=cliente_cedula).first()
                 if persona:
-                    cliente_obj = Cliente(personas_cedula=persona.cedula, departamento='', ciudad='')
+                    cliente_obj = Cliente(
+                        personas_cedula=persona.cedula, departamento='', ciudad='')
                     db.session.add(cliente_obj)
                     db.session.flush()
                 else:
@@ -486,7 +526,8 @@ def nueva_reserva():
                 ).first()
 
                 if reservas_conflicto:
-                    flash(f'La habitación ID {hab_id} ya está reservada en esas fechas.', 'danger')
+                    flash(
+                        f'La habitación ID {hab_id} ya está reservada en esas fechas.', 'danger')
                     return redirect(request.url)
 
             nueva_reserva = Reserva(
@@ -518,20 +559,23 @@ def nueva_reserva():
 
     todas_habitaciones = Habitacion.query.all()
     habitaciones_activas = []
-    
+
     for habitacion in todas_habitaciones:
         if habitacion.estado not in ['mantenimiento', 'inactiva']:
-            habitacion.estado_texto = get_estado_habitacion_texto(habitacion.estado)
+            habitacion.estado_texto = get_estado_habitacion_texto(
+                habitacion.estado)
             habitaciones_activas.append(habitacion)
-    
+
     cliente_registrado = None
     cliente_cedula_param = request.args.get('cliente_cedula')
     if cliente_cedula_param:
-        cliente_registrado = Persona.query.filter_by(cedula=cliente_cedula_param, roles_idroles=2).first()
+        cliente_registrado = Persona.query.filter_by(
+            cedula=cliente_cedula_param, roles_idroles=2).first()
 
     return render_template('recepcion/reserva_nueva.html',
                            habitaciones=habitaciones_activas,
                            cliente_registrado=cliente_registrado)
+
 
 @recepcion_bp.route('/recepcion/habitacion/reservas')
 @login_required
@@ -549,7 +593,7 @@ def reservas_por_habitacion():
         return jsonify({'error': 'IDs de habitación inválidos'}), 400
 
     hoy = date.today()
-    
+
     reservas = db.session.query(Reserva).join(DetalleReserva).filter(
         DetalleReserva.habitaciones_idhabitaciones.in_(habitacion_ids),
         Reserva.checkout > hoy,
@@ -563,8 +607,9 @@ def reservas_por_habitacion():
             'estado': r.estado
         } for r in reservas
     ]
-    
+
     return jsonify(lista_reservas)
+
 
 @recepcion_bp.route('/recepcion/buscar-cliente')
 @login_required
@@ -586,6 +631,7 @@ def buscar_cliente():
 
     resultados = [{'cedula': c.cedula, 'nombre': c.nombre} for c in clientes]
     return jsonify(resultados)
+
 
 @recepcion_bp.route('/recepcion/clientes-alojados')
 @login_required
@@ -621,12 +667,13 @@ def clientes_alojados():
                 Persona.cedula.ilike(f'%{filtro}%')
             )
         )
-    
+
     clientes_info = query.all()
 
-    return render_template('recepcion/clientes_alojados.html', 
-                           clientes=clientes_info, 
+    return render_template('recepcion/clientes_alojados.html',
+                           clientes=clientes_info,
                            filtro=filtro)
+
 
 @recepcion_bp.route('/recepcion/clientes_personal')
 @login_required
@@ -649,6 +696,7 @@ def clientes_personal():
         ]
 
     return render_template('recepcion/clientes_personal.html', personas=personas, filtro=filtro)
+
 
 @recepcion_bp.app_template_filter('estado_habitacion')
 def estado_habitacion_filter(estado):
