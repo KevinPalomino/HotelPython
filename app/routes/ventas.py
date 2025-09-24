@@ -1,6 +1,5 @@
-# app/routes/ventas.py
 from flask import Blueprint, render_template, request, redirect, url_for, flash
-from app.models.models import Inventario, Ventas
+from app.models.models import Inventario, Ventas, Consumo
 from app.extensions import db
 from datetime import datetime
 
@@ -24,12 +23,23 @@ def ventas():
                 flash("⚠️ No hay suficiente stock disponible.", "warning")
                 return redirect(url_for("ventas.ventas"))
 
-            # Registrar venta
+            # Buscar un consumo activo al cual ligar la venta
+            consumo = Consumo.query.filter_by(
+                inventario_idinventario=producto.idinventario,
+                estado=True
+            ).first()
+
+            if not consumo:
+                flash("⚠️ No hay consumo activo disponible para este producto.", "warning")
+                return redirect(url_for("ventas.ventas"))
+
+            # Registrar venta ligada al consumo
             nueva_venta = Ventas(
                 fecha=datetime.now(),
                 cantidad=cantidad_vendida,
                 precio=producto.precio,
-                id_inventario=producto.idinventario  # ✅ aquí estaba el error
+                id_inventario=producto.idinventario,
+                id_consumo=consumo.idconsumos  # ✅ Enlace automático
             )
             db.session.add(nueva_venta)
 
@@ -37,7 +47,7 @@ def ventas():
             producto.cantidad -= cantidad_vendida
             db.session.commit()
 
-            flash("✅ Venta registrada con éxito.", "success")
+            flash("✅ Venta registrada y ligada al consumo con éxito.", "success")
             return redirect(url_for("ventas.ventas"))
 
         except Exception as e:
