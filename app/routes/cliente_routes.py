@@ -46,6 +46,7 @@ def reservas_por_habitacion():
         })
     return jsonify(resultado)
 
+
 @cliente_bp.route('/reservar/<int:id>', methods=['GET', 'POST'])
 def reservar_habitacion(id):
     habitacion = Habitacion.query.get_or_404(id)
@@ -65,7 +66,8 @@ def reservar_habitacion(id):
         # Calcular el valor total de la reserva
         precio_total = habitacion.precio * (salida - entrada).days
         if abono > precio_total:
-            flash(f'❌ El abono no puede ser mayor al valor total de la reserva (${precio_total:,}).', 'danger')
+            flash(
+                f'❌ El abono no puede ser mayor al valor total de la reserva (${precio_total:,}).', 'danger')
             return redirect(url_for('cliente.reservar_habitacion', id=habitacion.idhabitaciones))
 
         # -------------------------------

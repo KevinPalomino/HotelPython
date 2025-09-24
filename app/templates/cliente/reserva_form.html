@@ -1,336 +1,415 @@
-{% extends "base.html" %}
-
-{% block title %}Reservar Habitación - Hotel Management{% endblock %}
-
-{% block content %}
+{% extends "base.html" %} {% block title %}Reservar Habitación - Hotel
+Management{% endblock %} {% block content %}
 <!-- Incluir Flatpickr CSS y JS -->
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<link
+  rel="stylesheet"
+  href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css"
+/>
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 
 <style>
-    /* Estilos para los días coloreados en el calendario Flatpickr */
-    .flatpickr-day.reserved-pending {
-        background-color: #ffe082; /* Amarillo */
-        border-color: #ffe082;
-        color: #5d4037;
-    }
-    .flatpickr-day.reserved-occupied {
-        background-color: #ef9a9a; /* Rojo */
-        border-color: #ef9a9a;
-        color: #b71c1c;
-        font-weight: bold;
-    }
-    .flatpickr-day.reserved-pending:hover, .flatpickr-day.reserved-occupied:hover {
-        background-color: #bdbdbd; /* Gris al pasar el mouse para indicar que no se puede seleccionar */
-        border-color: #bdbdbd;
-    }
-    .flatpickr-day.disabled, .flatpickr-day.disabled:hover {
-        background-color: #e0e0e0;
-        border-color: #e0e0e0;
-        cursor: not-allowed;
-    }
+  /* Estilos para los días coloreados en el calendario Flatpickr */
+  .flatpickr-day.reserved-pending {
+    background-color: #ffe082; /* Amarillo */
+    border-color: #ffe082;
+    color: #5d4037;
+  }
+  .flatpickr-day.reserved-occupied {
+    background-color: #ef9a9a; /* Rojo */
+    border-color: #ef9a9a;
+    color: #b71c1c;
+    font-weight: bold;
+  }
+  .flatpickr-day.reserved-pending:hover,
+  .flatpickr-day.reserved-occupied:hover {
+    background-color: #bdbdbd; /* Gris al pasar el mouse para indicar que no se puede seleccionar */
+    border-color: #bdbdbd;
+  }
+  .flatpickr-day.disabled,
+  .flatpickr-day.disabled:hover {
+    background-color: #e0e0e0;
+    border-color: #e0e0e0;
+    cursor: not-allowed;
+  }
 </style>
 <div class="breadcrumb">
-    <a href="{{ url_for('cliente.ver_habitaciones') }}">
-        <i class="fas fa-bed"></i> Habitaciones
-    </a>
-    <span> / Reservar Habitación #{{ habitacion.idhabitaciones }}</span>
+  <a href="{{ url_for('cliente.ver_habitaciones') }}">
+    <i class="fas fa-bed"></i> Habitaciones
+  </a>
+  <span> / Reservar Habitación #{{ habitacion.idhabitaciones }}</span>
 </div>
 
 <h1 class="page-title">
-    <i class="fas fa-calendar-plus"></i>
-    Reservar Habitación #{{ habitacion.idhabitaciones }}
+  <i class="fas fa-calendar-plus"></i>
+  Reservar Habitación #{{ habitacion.idhabitaciones }}
 </h1>
 
 <div class="card">
-    <div class="card-header">
-        <h2 class="card-title">{{ habitacion.tipo }}</h2>
-        <div class="room-price">${{ "{:,.0f}".format(habitacion.precio) }} por noche</div>
+  <div class="card-header">
+    <h2 class="card-title">{{ habitacion.tipo }}</h2>
+    <div class="room-price">
+      ${{ "{:,.0f}".format(habitacion.precio) }} por noche
     </div>
+  </div>
 
-    <div class="form-container">
-        <form method="POST">
-            <div class="form-group">
-                <label for="cedula" class="form-label">
-                    <i class="fas fa-id-card"></i>
-                    Cédula
-                </label>
-                <input type="text" id="cedula" name="cedula" class="form-input" required 
-                       placeholder="Número de cédula">
-            </div>
+  <div class="form-container">
+    <form method="POST">
+      <div class="form-group">
+        <label for="cedula" class="form-label">
+          <i class="fas fa-id-card"></i>
+          Cédula
+        </label>
+        <input
+          type="text"
+          id="cedula"
+          name="cedula"
+          class="form-input"
+          required
+          placeholder="Número de cédula"
+        />
+      </div>
 
-            <div class="form-group">
-                <label for="nombre" class="form-label">
-                    <i class="fas fa-user"></i>
-                    Nombre Completo
-                </label>
-                <input type="text" id="nombre" name="nombre" class="form-input" required 
-                       placeholder="Nombre completo">
-            </div>
+      <div class="form-group">
+        <label for="nombre" class="form-label">
+          <i class="fas fa-user"></i>
+          Nombre Completo
+        </label>
+        <input
+          type="text"
+          id="nombre"
+          name="nombre"
+          class="form-input"
+          required
+          placeholder="Nombre completo"
+        />
+      </div>
 
-            <div class="form-group">
-                <label for="correo" class="form-label">
-                    <i class="fas fa-envelope"></i>
-                    Correo Electrónico
-                </label>
-                <input type="email" id="correo" name="correo" class="form-input" required 
-                       placeholder="correo@ejemplo.com">
-            </div>
+      <div class="form-group">
+        <label for="correo" class="form-label">
+          <i class="fas fa-envelope"></i>
+          Correo Electrónico
+        </label>
+        <input
+          type="email"
+          id="correo"
+          name="correo"
+          class="form-input"
+          required
+          placeholder="correo@ejemplo.com"
+        />
+      </div>
 
-            <div class="form-group">
-                <label for="telefono" class="form-label">
-                    <i class="fas fa-phone"></i>
-                    Teléfono
-                </label>
-                <input type="text" id="telefono" name="telefono" class="form-input" required 
-                       placeholder="Número de teléfono">
-            </div>
+      <div class="form-group">
+        <label for="telefono" class="form-label">
+          <i class="fas fa-phone"></i>
+          Teléfono
+        </label>
+        <input
+          type="text"
+          id="telefono"
+          name="telefono"
+          class="form-input"
+          required
+          placeholder="Número de teléfono"
+        />
+      </div>
 
-            <div class="form-group">
-                <label for="departamento" class="form-label">
-                    <i class="fas fa-map-marker-alt"></i>
-                    Departamento
-                </label>
-                <input type="text" id="departamento" name="departamento" class="form-input" required 
-                       placeholder="Departamento de residencia">
-            </div>
+      <div class="form-group">
+        <label for="departamento" class="form-label">
+          <i class="fas fa-map-marker-alt"></i>
+          Departamento
+        </label>
+        <input
+          type="text"
+          id="departamento"
+          name="departamento"
+          class="form-input"
+          required
+          placeholder="Departamento de residencia"
+        />
+      </div>
 
-            <div class="form-group">
-                <label for="ciudad" class="form-label">
-                    <i class="fas fa-city"></i>
-                    Ciudad
-                </label>
-                <input type="text" id="ciudad" name="ciudad" class="form-input" required 
-                       placeholder="Ciudad de residencia">
-            </div>
+      <div class="form-group">
+        <label for="ciudad" class="form-label">
+          <i class="fas fa-city"></i>
+          Ciudad
+        </label>
+        <input
+          type="text"
+          id="ciudad"
+          name="ciudad"
+          class="form-input"
+          required
+          placeholder="Ciudad de residencia"
+        />
+      </div>
 
-            <div class="form-group">
-                <label for="entrada" class="form-label">
-                    <i class="fas fa-calendar-alt"></i>
-                    Fecha de Entrada
-                </label>
-                <input type="text" id="entrada" name="entrada" class="form-input" required placeholder="Selecciona una fecha..." readonly>
-            </div>
+      <div class="form-group">
+        <label for="entrada" class="form-label">
+          <i class="fas fa-calendar-alt"></i>
+          Fecha de Entrada
+        </label>
+        <input
+          type="text"
+          id="entrada"
+          name="entrada"
+          class="form-input"
+          required
+          placeholder="Selecciona una fecha..."
+          readonly
+        />
+      </div>
 
-            <div class="form-group">
-                <label for="salida" class="form-label">
-                    <i class="fas fa-calendar-alt"></i>
-                    Fecha de Salida
-                </label>
-                <input type="text" id="salida" name="salida" class="form-input" required placeholder="Selecciona una fecha..." readonly>
-            </div>
+      <div class="form-group">
+        <label for="salida" class="form-label">
+          <i class="fas fa-calendar-alt"></i>
+          Fecha de Salida
+        </label>
+        <input
+          type="text"
+          id="salida"
+          name="salida"
+          class="form-input"
+          required
+          placeholder="Selecciona una fecha..."
+          readonly
+        />
+      </div>
 
-            <div class="form-group">
-                <label for="metodo_pago" class="form-label">
-                    <i class="fas fa-credit-card"></i>
-                    Método de Pago
-                </label>
-                <select id="metodo_pago" name="metodo_pago" class="form-select" 
-                        onchange="mostrarAbono()" required>
-                    <option value="">Seleccione método de pago</option>
-                    <option value="fisico">Pago en caja (físico)</option>
-                    <option value="nequi">Nequi</option>
-                </select>
-            </div>
+      <div class="form-group">
+        <label for="metodo_pago" class="form-label">
+          <i class="fas fa-credit-card"></i>
+          Método de Pago
+        </label>
+        <select
+          id="metodo_pago"
+          name="metodo_pago"
+          class="form-select"
+          onchange="mostrarAbono()"
+          required
+        >
+          <option value="">Seleccione método de pago</option>
+          <option value="fisico">Pago en caja (físico)</option>
+          <option value="nequi">Nequi</option>
+        </select>
+      </div>
 
-            <div id="campo_abono" style="display: none;" class="form-group">
-                <label for="abono" class="form-label">
-                    <i class="fas fa-dollar-sign"></i>
-                    Monto del Abono
-                </label>
-                <input type="number" id="abono" name="abono" class="form-input" 
-                       min="0" placeholder="Monto del abono inicial">
-                <small id="abono-max-info" class="text-muted"></small>
-            </div>
+      <div id="campo_abono" style="display: none" class="form-group">
+        <label for="abono" class="form-label">
+          <i class="fas fa-dollar-sign"></i>
+          Monto del Abono
+        </label>
+        <input
+          type="number"
+          id="abono"
+          name="abono"
+          class="form-input"
+          min="0"
+          placeholder="Monto del abono inicial"
+        />
+        <small id="abono-max-info" class="text-muted"></small>
+      </div>
 
-            <div class="btn-group">
-                <button type="submit" class="btn btn-success">
-                    <i class="fas fa-check"></i>
-                    Confirmar Reserva
-                </button>
-                <a href="{{ url_for('cliente.ver_habitaciones') }}" class="btn btn-secondary">
-                    <i class="fas fa-arrow-left"></i>
-                    Volver a Habitaciones
-                </a>
-            </div>
-        </form>
-    </div>
+      <div class="btn-group">
+        <button type="submit" class="btn btn-success">
+          <i class="fas fa-check"></i>
+          Confirmar Reserva
+        </button>
+        <a
+          href="{{ url_for('cliente.ver_habitaciones') }}"
+          class="btn btn-secondary"
+        >
+          <i class="fas fa-arrow-left"></i>
+          Volver a Habitaciones
+        </a>
+      </div>
+    </form>
+  </div>
 </div>
 
 <script>
-    function mostrarAbono() {
-        const metodo = document.getElementById("metodo_pago").value;
-        const campoAbono = document.getElementById("campo_abono");
-        if (metodo === "nequi" || metodo === "fisico") {
-            campoAbono.style.display = "block";
-        } else {
-            campoAbono.style.display = "none";
-        }
+  function mostrarAbono() {
+    const metodo = document.getElementById("metodo_pago").value;
+    const campoAbono = document.getElementById("campo_abono");
+    if (metodo === "nequi" || metodo === "fisico") {
+      campoAbono.style.display = "block";
+    } else {
+      campoAbono.style.display = "none";
+    }
+  }
+
+  // --- LÓGICA DEL CALENDARIO CON COLORES Y ABONO LIMITADO ---
+  document.addEventListener("DOMContentLoaded", function () {
+    const entradaInput = document.getElementById("entrada");
+    const salidaInput = document.getElementById("salida");
+    const abonoInput = document.getElementById("abono");
+    const abonoMaxInfo = document.getElementById("abono-max-info");
+    let entradaPicker, salidaPicker;
+    let currentReservedDates = [];
+
+    function createDateFromYMD(dateStr) {
+      const parts = dateStr.split("-");
+      return new Date(
+        parseInt(parts[0]),
+        parseInt(parts[1]) - 1,
+        parseInt(parts[2])
+      );
     }
 
-    // --- LÓGICA DEL CALENDARIO CON COLORES Y ABONO LIMITADO ---
-    document.addEventListener('DOMContentLoaded', function() {
-        const entradaInput = document.getElementById('entrada');
-        const salidaInput = document.getElementById('salida');
-        const abonoInput = document.getElementById('abono');
-        const abonoMaxInfo = document.getElementById('abono-max-info');
-        let entradaPicker, salidaPicker;
-        let currentReservedDates = [];
+    function dateToYMD(date) {
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, "0");
+      const day = String(date.getDate()).padStart(2, "0");
+      return `${year}-${month}-${day}`;
+    }
 
-        function createDateFromYMD(dateStr) {
-            const parts = dateStr.split('-');
-            return new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
+    function calcularMaxAbono() {
+      // Solo calcular si ambas fechas están seleccionadas
+      const entrada = entradaInput.value;
+      const salida = salidaInput.value;
+      if (!entrada || !salida) {
+        abonoInput.removeAttribute("max");
+        abonoMaxInfo.textContent = "";
+        return;
+      }
+      const entradaDate = createDateFromYMD(entrada);
+      const salidaDate = createDateFromYMD(salida);
+      const noches = (salidaDate - entradaDate) / (1000 * 60 * 60 * 24);
+      if (noches < 1) {
+        abonoInput.removeAttribute("max");
+        abonoMaxInfo.textContent = "";
+        return;
+      }
+      const precioNoche = Number("{{ habitacion.precio }}");
+      const total = precioNoche * noches;
+      abonoInput.setAttribute("max", total);
+      abonoMaxInfo.textContent = `Valor máximo permitido: $${total.toLocaleString(
+        "es-CO"
+      )}`;
+
+      // Validar el valor actual del input abono
+      if (abonoInput.value) {
+        let abonoActual = Number(abonoInput.value);
+        if (abonoActual > total) {
+          abonoInput.value = total;
         }
-
-        function dateToYMD(date) {
-            const year = date.getFullYear();
-            const month = String(date.getMonth() + 1).padStart(2, '0');
-            const day = String(date.getDate()).padStart(2, '0');
-            return `${year}-${month}-${day}`;
+        if (abonoActual < 0) {
+          abonoInput.value = 0;
         }
+      }
+    }
 
-        function calcularMaxAbono() {
-            // Solo calcular si ambas fechas están seleccionadas
-            const entrada = entradaInput.value;
-            const salida = salidaInput.value;
-            if (!entrada || !salida) {
-                abonoInput.removeAttribute('max');
-                abonoMaxInfo.textContent = '';
-                return;
-            }
-            const entradaDate = createDateFromYMD(entrada);
-            const salidaDate = createDateFromYMD(salida);
-            const noches = (salidaDate - entradaDate) / (1000 * 60 * 60 * 24);
-            if (noches < 1) {
-                abonoInput.removeAttribute('max');
-                abonoMaxInfo.textContent = '';
-                return;
-            }
-            const precioNoche = Number("{{ habitacion.precio }}");
-            const total = precioNoche * noches;
-            abonoInput.setAttribute('max', total);
-            abonoMaxInfo.textContent = `Valor máximo permitido: $${total.toLocaleString('es-CO')}`;
-
-            // Validar el valor actual del input abono
-            if (abonoInput.value) {
-                let abonoActual = Number(abonoInput.value);
-                if (abonoActual > total) {
-                    abonoInput.value = total;
-                }
-                if (abonoActual < 0) {
-                    abonoInput.value = 0;
-                }
-            }
-        }
-
-        abonoInput.addEventListener('input', function() {
-            const max = Number(abonoInput.getAttribute('max'));
-            let val = Number(abonoInput.value);
-            if (val > max) {
-                abonoInput.value = max;
-            }
-            if (val < 0) {
-                abonoInput.value = 0;
-            }
-        });
-
-        function initializePickers(reservedDates = [], disabledRanges = []) {
-            currentReservedDates = reservedDates;
-            const today = new Date();
-            today.setHours(0, 0, 0, 0);
-
-            const onDayCreate = (d, dateStr, fp, dayElem) => {
-                const currentDate = dayElem.dateObj;
-                for (const res of reservedDates) {
-                    const startDate = createDateFromYMD(res.checkin);
-                    const endDate = createDateFromYMD(res.checkout);
-                    if (currentDate >= startDate && currentDate < endDate) {
-                        const className = res.estado === 0 ? 'reserved-pending' : 'reserved-occupied';
-                        dayElem.classList.add(className);
-                        break;
-                    }
-                }
-            };
-
-            if (entradaPicker) entradaPicker.destroy();
-            if (salidaPicker) salidaPicker.destroy();
-
-            const commonConfig = {
-                dateFormat: "Y-m-d",
-                minDate: dateToYMD(today),
-                onDayCreate: onDayCreate,
-                disable: disabledRanges,
-            };
-
-            entradaPicker = flatpickr(entradaInput, {
-                ...commonConfig,
-                onChange: function(selectedDates, dateStr, instance) {
-                    if (selectedDates.length > 0) {
-                        updateSalidaConstraints(selectedDates[0]);
-                        setTimeout(calcularMaxAbono, 10);
-                    }
-                },
-            });
-
-            salidaPicker = flatpickr(salidaInput, {
-                ...commonConfig,
-                minDate: dateToYMD(new Date(new Date().setDate(today.getDate() + 1))),
-                onChange: function(selectedDates, dateStr, instance) {
-                    setTimeout(calcularMaxAbono, 10);
-                }
-            });
-        }
-
-        function updateSalidaConstraints(entradaDate) {
-            if (!salidaPicker) return;
-            salidaPicker.clear();
-            const nextDay = new Date(entradaDate);
-            nextDay.setDate(nextDay.getDate() + 1);
-            salidaPicker.set('minDate', dateToYMD(nextDay));
-
-            let maxSalidaDate = null;
-            for (const res of currentReservedDates) {
-                const reservaCheckin = createDateFromYMD(res.checkin);
-                if (reservaCheckin > entradaDate) {
-                    if (!maxSalidaDate || reservaCheckin < maxSalidaDate) {
-                        maxSalidaDate = reservaCheckin;
-                    }
-                }
-            }
-            if (maxSalidaDate) {
-                salidaPicker.set('maxDate', dateToYMD(maxSalidaDate));
-            } else {
-                salidaPicker.set('maxDate', null);
-            }
-        }
-
-        function cargarReservasHabitacion() {
-            // Obtener las reservas de la habitación actual
-            fetch(`{{ url_for('cliente.reservas_por_habitacion') }}?id={{ habitacion.idhabitaciones }}`)
-                .then(response => response.json())
-                .then(data => {
-                    const disabledRanges = data.map(res => {
-                        const startDate = createDateFromYMD(res.checkin);
-                        const endDate = createDateFromYMD(res.checkout);
-                        const disabledEndDate = new Date(endDate);
-                        disabledEndDate.setDate(disabledEndDate.getDate() - 1);
-                        return {
-                            from: dateToYMD(startDate),
-                            to: dateToYMD(disabledEndDate)
-                        };
-                    });
-                    initializePickers(data, disabledRanges);
-                })
-                .catch(error => {
-                    console.error("Error al cargar fechas:", error);
-                    initializePickers([], []);
-                });
-        }
-
-        entradaInput.addEventListener('change', calcularMaxAbono);
-        salidaInput.addEventListener('change', calcularMaxAbono);
-
-        cargarReservasHabitacion();
+    abonoInput.addEventListener("input", function () {
+      const max = Number(abonoInput.getAttribute("max"));
+      let val = Number(abonoInput.value);
+      if (val > max) {
+        abonoInput.value = max;
+      }
+      if (val < 0) {
+        abonoInput.value = 0;
+      }
     });
+
+    function initializePickers(reservedDates = [], disabledRanges = []) {
+      currentReservedDates = reservedDates;
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
+      const onDayCreate = (d, dateStr, fp, dayElem) => {
+        const currentDate = dayElem.dateObj;
+        for (const res of reservedDates) {
+          const startDate = createDateFromYMD(res.checkin);
+          const endDate = createDateFromYMD(res.checkout);
+          if (currentDate >= startDate && currentDate < endDate) {
+            const className =
+              res.estado === 0 ? "reserved-pending" : "reserved-occupied";
+            dayElem.classList.add(className);
+            break;
+          }
+        }
+      };
+
+      if (entradaPicker) entradaPicker.destroy();
+      if (salidaPicker) salidaPicker.destroy();
+
+      const commonConfig = {
+        dateFormat: "Y-m-d",
+        minDate: dateToYMD(today),
+        onDayCreate: onDayCreate,
+        disable: disabledRanges,
+      };
+
+      entradaPicker = flatpickr(entradaInput, {
+        ...commonConfig,
+        onChange: function (selectedDates, dateStr, instance) {
+          if (selectedDates.length > 0) {
+            updateSalidaConstraints(selectedDates[0]);
+            setTimeout(calcularMaxAbono, 10);
+          }
+        },
+      });
+
+      salidaPicker = flatpickr(salidaInput, {
+        ...commonConfig,
+        minDate: dateToYMD(new Date(new Date().setDate(today.getDate() + 1))),
+        onChange: function (selectedDates, dateStr, instance) {
+          setTimeout(calcularMaxAbono, 10);
+        },
+      });
+    }
+
+    function updateSalidaConstraints(entradaDate) {
+      if (!salidaPicker) return;
+      salidaPicker.clear();
+      const nextDay = new Date(entradaDate);
+      nextDay.setDate(nextDay.getDate() + 1);
+      salidaPicker.set("minDate", dateToYMD(nextDay));
+
+      let maxSalidaDate = null;
+      for (const res of currentReservedDates) {
+        const reservaCheckin = createDateFromYMD(res.checkin);
+        if (reservaCheckin > entradaDate) {
+          if (!maxSalidaDate || reservaCheckin < maxSalidaDate) {
+            maxSalidaDate = reservaCheckin;
+          }
+        }
+      }
+      if (maxSalidaDate) {
+        salidaPicker.set("maxDate", dateToYMD(maxSalidaDate));
+      } else {
+        salidaPicker.set("maxDate", null);
+      }
+    }
+
+    function cargarReservasHabitacion() {
+      // Obtener las reservas de la habitación actual
+      fetch(
+        `{{ url_for('cliente.reservas_por_habitacion') }}?id={{ habitacion.idhabitaciones }}`
+      )
+        .then((response) => response.json())
+        .then((data) => {
+          const disabledRanges = data.map((res) => {
+            const startDate = createDateFromYMD(res.checkin);
+            const endDate = createDateFromYMD(res.checkout);
+            const disabledEndDate = new Date(endDate);
+            disabledEndDate.setDate(disabledEndDate.getDate() - 1);
+            return {
+              from: dateToYMD(startDate),
+              to: dateToYMD(disabledEndDate),
+            };
+          });
+          initializePickers(data, disabledRanges);
+        })
+        .catch((error) => {
+          console.error("Error al cargar fechas:", error);
+          initializePickers([], []);
+        });
+    }
+
+    entradaInput.addEventListener("change", calcularMaxAbono);
+    salidaInput.addEventListener("change", calcularMaxAbono);
+
+    cargarReservasHabitacion();
+  });
 </script>
 {% endblock %}
