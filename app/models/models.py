@@ -145,8 +145,13 @@ class Reserva(db.Model):
     checkout = db.Column(db.Date, nullable=False)
     abono = db.Column(db.BigInteger, nullable=False)
     estado = db.Column(db.Integer)  # tinyint(1) mapeado como Integer
-    clientes_idclientes = db.Column(db.Integer, db.ForeignKey(
-        'clientes.idclientes'), nullable=False)
+    fecha = db.Column(db.DateTime, default=datetime.now)  # ⬅️ nueva
+    comentario = db.Column(db.Text, nullable=True)  # ⬅️ nueva
+
+    clientes_idclientes = db.Column(
+        db.Integer, db.ForeignKey('clientes.idclientes'),
+        nullable=False
+    )
     cliente = db.relationship('Cliente', backref='reservas', lazy=True)
     detalle = db.relationship('DetalleReserva', backref='reserva', lazy=True)
 

@@ -285,8 +285,10 @@ def checkin_directo():
                 checkout=checkout_date,
                 abono=int(float(abono)) if abono else 0,
                 estado=1,
+                comentario=request.form.get('comentario'),
                 clientes_idclientes=cliente.idclientes
             )
+
             db.session.add(nueva_reserva)
             db.session.flush()
 
@@ -488,6 +490,8 @@ def nueva_reserva():
             checkin_str = request.form.get('checkin')
             checkout_str = request.form.get('checkout')
             abono = request.form.get('abono', 0)
+            comentario = request.form.get(
+                'comentario', '').strip()  # <-- AGREGAR ESTA LÍNEA
 
             if not all([cliente_cedula, habitacion_ids, checkin_str, checkout_str]):
                 flash(
@@ -535,6 +539,7 @@ def nueva_reserva():
                 checkout=checkout_date,
                 abono=int(float(abono)),
                 estado=0,
+                comentario=comentario,  # <-- USAR LA VARIABLE AQUÍ
                 clientes_idclientes=cliente_obj.idclientes
             )
             db.session.add(nueva_reserva)

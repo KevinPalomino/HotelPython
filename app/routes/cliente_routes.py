@@ -1,5 +1,5 @@
 # app/routes/cliente_routes.py
-from flask import Blueprint, render_template, request, redirect, url_for, flash, Response
+from flask import Blueprint, render_template, request, jsonify, redirect, url_for, flash, Response
 from app import db
 from app.models.models import Habitacion, Cliente, Persona, Reserva, DetalleReserva, Foto
 from datetime import datetime, date
@@ -38,11 +38,29 @@ def reservar_habitacion(id):
         telefono = request.form['telefono']
         departamento = request.form['departamento']
         ciudad = request.form['ciudad']
-        entrada = request.form['entrada']
-        salida = request.form['salida']
+        entrada = datetime.strptime(request.form['entrada'], "%Y-%m-%d").date()
+        salida = datetime.strptime(request.form['salida'], "%Y-%m-%d").date()
         metodo_pago = request.form['metodo_pago']
         abono = request.form.get('abono', 0)
 
+        # -------------------------------
+        # Validación de disponibilidad
+        # -------------------------------
+        reserva_conflicto = db.session.query(Reserva).join(DetalleReserva).filter(
+            DetalleReserva.habitaciones_idhabitaciones == habitacion.idhabitaciones,
+            Reserva.estado.in_([0, 1]),  # solo reservas activas o pendientes
+            Reserva.checkin < salida,
+            Reserva.checkout > entrada
+        ).first()
+
+        if reserva_conflicto:
+            flash(
+                '❌ La habitación ya está ocupada en las fechas seleccionadas.', 'danger')
+            return redirect(url_for('cliente.reservar_habitacion', id=habitacion.idhabitaciones))
+
+        # -------------------------------
+        # Crear persona si no existe
+        # -------------------------------
         persona = Persona.query.get(cedula)
         if not persona:
             persona = Persona(
@@ -57,6 +75,9 @@ def reservar_habitacion(id):
             db.session.add(persona)
             db.session.flush()
 
+        # -------------------------------
+        # Crear cliente
+        # -------------------------------
         cliente = Cliente(
             departamento=departamento,
             ciudad=ciudad,
@@ -65,6 +86,9 @@ def reservar_habitacion(id):
         db.session.add(cliente)
         db.session.flush()
 
+        # -------------------------------
+        # Crear reserva
+        # -------------------------------
         reserva = Reserva(
             checkin=entrada,
             checkout=salida,
@@ -75,6 +99,9 @@ def reservar_habitacion(id):
         db.session.add(reserva)
         db.session.flush()
 
+        # -------------------------------
+        # Crear detalle
+        # -------------------------------
         detalle = DetalleReserva(
             reservas_idreservas=reserva.idreservas,
             habitaciones_idhabitaciones=habitacion.idhabitaciones
@@ -82,7 +109,7 @@ def reservar_habitacion(id):
         db.session.add(detalle)
         db.session.commit()
 
-        flash('¡Reserva realizada con éxito!', 'success')
+        flash('✅ ¡Reserva realizada con éxito!', 'success')
         return redirect(url_for('cliente.ver_habitaciones'))
 
     return render_template('cliente/reserva_form.html', habitacion=habitacion, hoy=date.today())
