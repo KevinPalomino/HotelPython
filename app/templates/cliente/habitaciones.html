@@ -1,9 +1,70 @@
-{% extends "base.html" %} {% block title %}Habitaciones Disponibles - Hotel
-Management{% endblock %} {% block content %}
+{% extends "base.html" %}
+{% block title %}Habitaciones Disponibles - Hotel Management{% endblock %}
+{% block content %}
 <h1 class="page-title">
   <i class="fas fa-bed"></i>
   Habitaciones Disponibles
 </h1>
+
+<!-- Filtros -->
+<form method="get" class="card mb-4 p-3 shadow-sm" id="filtros-form">
+  <div class="row g-3 align-items-end">
+    <div class="col-md-3">
+      <label for="fecha_entrada" class="form-label">Fecha de entrada</label>
+      <input type="text" class="form-control" id="fecha_entrada" name="fecha_entrada" placeholder="Selecciona fecha" value="{{ request.args.get('fecha_entrada', '') }}" autocomplete="off" readonly>
+    </div>
+    <div class="col-md-3">
+      <label for="fecha_salida" class="form-label">Fecha de salida</label>
+      <input type="text" class="form-control" id="fecha_salida" name="fecha_salida" placeholder="Selecciona fecha" value="{{ request.args.get('fecha_salida', '') }}" autocomplete="off" readonly>
+    </div>
+    <div class="col-md-2">
+      <label for="categoria" class="form-label">Categoría</label>
+      <select class="form-select" id="categoria" name="categoria">
+        <option value="">Todas</option>
+        {% for cat in categorias %}
+        <option value="{{ cat.idcategorias }}" {% if request.args.get('categoria') == cat.idcategorias|string %}selected{% endif %}>{{ cat.nombre }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="col-md-4">
+      <label for="precio_range" class="form-label">Precio por noche</label>
+      <div class="d-flex align-items-center">
+        <input type="range" class="form-range" id="precio_range" name="precio_range" min="{{ min_precio }}" max="{{ max_precio }}" step="10000" value="{{ request.args.get('precio_min', min_precio) }}" oninput="updatePrecioLabel()">
+        <span class="ms-3" id="precio_range_label"></span>
+      </div>
+      <input type="hidden" id="precio_min" name="precio_min" value="{{ request.args.get('precio_min', min_precio) }}">
+      <input type="hidden" id="precio_max" name="precio_max" value="{{ request.args.get('precio_max', max_precio) }}">
+    </div>
+    <div class="col-md-12 mt-3 text-end">
+      <button type="submit" class="btn btn-primary">
+        <i class="fas fa-filter"></i> Filtrar Habitaciones
+      </button>
+    </div>
+  </div>
+</form>
+
+<!-- Flatpickr CSS/JS -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script>
+  flatpickr("#fecha_entrada", { dateFormat: "Y-m-d", minDate: "today" });
+  flatpickr("#fecha_salida", { dateFormat: "Y-m-d", minDate: "today" });
+
+  // Slider de precio visual
+  function updatePrecioLabel() {
+    const min = Number("{{ min_precio|int }}");
+    const max = Number("{{ max_precio|int }}");
+    const slider = document.getElementById('precio_range');
+    const label = document.getElementById('precio_range_label');
+    const precioMinInput = document.getElementById('precio_min');
+    const precioMaxInput = document.getElementById('precio_max');
+    let val = Number(slider.value);
+    label.textContent = `$${val.toLocaleString('es-CO')} — $${max.toLocaleString('es-CO')}`;
+    precioMinInput.value = val;
+    precioMaxInput.value = max;
+  }
+  document.addEventListener('DOMContentLoaded', updatePrecioLabel);
+</script>
 
 <div class="room-grid">
   {% for habitacion in habitaciones %}
@@ -111,4 +172,5 @@ Management{% endblock %} {% block content %}
     más tarde.
   </p>
 </div>
-{% endif %} {% endblock %}
+{% endif %}
+{% endblock %}

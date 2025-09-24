@@ -38,7 +38,7 @@ def es_habitacion_ocupada(habitacion):
 
 
 @recepcion_bp.route('/recepcion')
-@login_required
+# @login_required
 def panel_recepcionista():
     if current_user.rol.nombre != 'Recepcionista':
         flash('Acceso no autorizado', 'danger')
@@ -47,7 +47,7 @@ def panel_recepcionista():
 
 
 @recepcion_bp.route('/recepcion/checkin')
-@login_required
+# @login_required
 def ver_reservas_checkin():
     if current_user.rol.nombre != 'Recepcionista':
         flash('Acceso no autorizado', 'danger')
@@ -105,7 +105,7 @@ def ver_reservas_checkin():
 
 
 @recepcion_bp.route('/recepcion/checkin/<int:reserva_id>', methods=['GET', 'POST'])
-@login_required
+# @login_required
 def hacer_checkin(reserva_id):
     if current_user.rol.nombre != 'Recepcionista':
         flash('Acceso no autorizado', 'danger')
@@ -147,7 +147,7 @@ def hacer_checkin(reserva_id):
 
 
 @recepcion_bp.route('/recepcion/reservas-canceladas')
-@login_required
+# @login_required
 def ver_reservas_canceladas():
     if current_user.rol.nombre != 'Recepcionista':
         flash('Acceso no autorizado', 'danger')
@@ -173,7 +173,7 @@ def ver_reservas_canceladas():
 
 
 @recepcion_bp.route('/recepcion/cancelar-reserva/<int:reserva_id>', methods=['POST'])
-@login_required
+# @login_required
 def cancelar_reserva(reserva_id):
     if current_user.rol.nombre != 'Recepcionista':
         flash('Acceso no autorizado', 'danger')
@@ -203,7 +203,7 @@ def cancelar_reserva(reserva_id):
 
 
 @recepcion_bp.route('/recepcion/checkin-directo', methods=['GET', 'POST'])
-@login_required
+# @login_required
 def checkin_directo():
     if current_user.rol.nombre != 'Recepcionista':
         flash('Acceso no autorizado', 'danger')
@@ -341,7 +341,7 @@ def checkin_directo():
 
 
 @recepcion_bp.route('/recepcion/checkout')
-@login_required
+# @login_required
 def ver_reservas_checkout():
     if current_user.rol.nombre != 'Recepcionista':
         flash('Acceso no autorizado', 'danger')
@@ -394,7 +394,7 @@ def ver_reservas_checkout():
 
 
 @recepcion_bp.route('/recepcion/checkout/<int:reserva_id>', methods=['GET', 'POST'])
-@login_required
+# @login_required
 def hacer_checkout(reserva_id):
     if current_user.rol.nombre != 'Recepcionista':
         flash('Acceso no autorizado', 'danger')
@@ -436,7 +436,7 @@ def hacer_checkout(reserva_id):
 
 
 @recepcion_bp.route('/recepcion/cliente/nuevo', methods=['GET', 'POST'])
-@login_required
+# @login_required
 def registrar_cliente():
     if current_user.rol.nombre != 'Recepcionista':
         flash('Acceso denegado', 'danger')
@@ -477,7 +477,7 @@ def registrar_cliente():
 
 
 @recepcion_bp.route('/recepcion/reserva/nueva', methods=['GET', 'POST'])
-@login_required
+# @login_required
 def nueva_reserva():
     if current_user.rol.nombre != 'Recepcionista':
         flash('Acceso no autorizado', 'danger')
@@ -583,7 +583,7 @@ def nueva_reserva():
 
 
 @recepcion_bp.route('/recepcion/habitacion/reservas')
-@login_required
+# @login_required
 def reservas_por_habitacion():
     if current_user.rol.nombre != 'Recepcionista':
         return jsonify({'error': 'No autorizado'}), 403
@@ -617,7 +617,7 @@ def reservas_por_habitacion():
 
 
 @recepcion_bp.route('/recepcion/buscar-cliente')
-@login_required
+# @login_required
 def buscar_cliente():
     if current_user.rol.nombre != 'Recepcionista':
         return jsonify({'error': 'No autorizado'}), 403
@@ -681,7 +681,7 @@ def clientes_alojados():
 
 
 @recepcion_bp.route('/recepcion/clientes_personal')
-@login_required
+# @login_required
 def clientes_personal():
     if current_user.rol.nombre != 'Recepcionista':
         flash('Acceso no autorizado', 'danger')

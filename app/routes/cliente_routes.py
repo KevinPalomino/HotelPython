@@ -17,8 +17,57 @@ def inicio():
 # y se envían al template 'cliente/habitaciones.html' para ser renderizadas.
 @cliente_bp.route('/habitaciones')
 def ver_habitaciones():
-    habitaciones = Habitacion.query.filter_by(estado="disponible").all()
-    return render_template('cliente/habitaciones.html', habitaciones=habitaciones)
+    from app.models.models import Categoria
+    # Filtros
+    fecha_entrada = request.args.get('fecha_entrada')
+    fecha_salida = request.args.get('fecha_salida')
+    categoria_id = request.args.get('categoria', type=int)
+    precio_min = request.args.get('precio_min', type=int)
+    precio_max = request.args.get('precio_max', type=int)
+
+    # Base query: solo habitaciones activas
+    habitaciones_query = Habitacion.query.filter_by(estado="disponible")
+    if categoria_id:
+        habitaciones_query = habitaciones_query.filter(Habitacion.categorias_idcategorias == categoria_id)
+    if precio_min is not None:
+        habitaciones_query = habitaciones_query.filter(Habitacion.precio >= precio_min)
+    if precio_max is not None:
+        habitaciones_query = habitaciones_query.filter(Habitacion.precio <= precio_max)
+
+    habitaciones = habitaciones_query.all()
+
+    # Filtrar por fechas: solo mostrar habitaciones sin reservas que se crucen
+    if fecha_entrada and fecha_salida:
+        try:
+            entrada = datetime.strptime(fecha_entrada, "%Y-%m-%d").date()
+            salida = datetime.strptime(fecha_salida, "%Y-%m-%d").date()
+            disponibles = []
+            for hab in habitaciones:
+                reservas = db.session.query(Reserva).join(DetalleReserva).filter(
+                    DetalleReserva.habitaciones_idhabitaciones == hab.idhabitaciones,
+                    Reserva.estado.in_([0, 1]),
+                    Reserva.checkin < salida,
+                    Reserva.checkout > entrada
+                ).first()
+                if not reservas:
+                    disponibles.append(hab)
+            habitaciones = disponibles
+        except Exception:
+            pass
+
+    # Obtener categorías para el filtro
+    categorias = Categoria.query.all()
+    # Calcular rango de precios para el slider
+    min_precio = db.session.query(db.func.min(Habitacion.precio)).scalar() or 0
+    max_precio = db.session.query(db.func.max(Habitacion.precio)).scalar() or 0
+
+    return render_template(
+        'cliente/habitaciones.html',
+        habitaciones=habitaciones,
+        categorias=categorias,
+        min_precio=min_precio,
+        max_precio=max_precio
+    )
 
 
 @cliente_bp.route('/imagen_habitacion/<int:idfoto>')
@@ -120,7 +169,7 @@ def reservar_habitacion(id):
             checkin=entrada,
             checkout=salida,
             abono=abono or 0,
-            estado=1,
+            estado=0,  # Pendiente, para que aparezca en check-in
             clientes_idclientes=cliente.idclientes
         )
         db.session.add(reserva)
