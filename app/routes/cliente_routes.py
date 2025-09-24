@@ -28,11 +28,14 @@ def ver_habitaciones():
     # Base query: solo habitaciones activas
     habitaciones_query = Habitacion.query.filter_by(estado="disponible")
     if categoria_id:
-        habitaciones_query = habitaciones_query.filter(Habitacion.categorias_idcategorias == categoria_id)
+        habitaciones_query = habitaciones_query.filter(
+            Habitacion.categorias_idcategorias == categoria_id)
     if precio_min is not None:
-        habitaciones_query = habitaciones_query.filter(Habitacion.precio >= precio_min)
+        habitaciones_query = habitaciones_query.filter(
+            Habitacion.precio >= precio_min)
     if precio_max is not None:
-        habitaciones_query = habitaciones_query.filter(Habitacion.precio <= precio_max)
+        habitaciones_query = habitaciones_query.filter(
+            Habitacion.precio <= precio_max)
 
     habitaciones = habitaciones_query.all()
 
