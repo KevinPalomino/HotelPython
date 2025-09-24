@@ -26,8 +26,19 @@
         </div>
     </div>
 
+    <!-- 🔍 Campo de búsqueda -->
+    <div style="padding: 1rem;">
+        <input 
+            type="text" 
+            id="filtroInventario" 
+            class="form-control" 
+            placeholder="Buscar por ID, nombre, categoría, precio o descripción..."
+            style="width: 100%; padding: 0.5rem; border: 1px solid #ccc; border-radius: 5px;"
+        >
+    </div>
+
     <div class="table-container">
-        <table class="table">
+        <table class="table" id="tablaInventario">
             <thead>
                 <tr>
                     <th><i class="fas fa-hashtag"></i> ID</th>
@@ -69,4 +80,34 @@
         </table>
     </div>
 </div>
+
+<!-- 📜 Script del filtro -->
+<script>
+document.getElementById("filtroInventario").addEventListener("keyup", function() {
+    let filtro = this.value.toLowerCase();
+    let filas = document.querySelectorAll("#tablaInventario tbody tr");
+
+    filas.forEach(function(fila) {
+        let id = fila.cells[0].textContent.toLowerCase();
+        let nombre = fila.cells[1].textContent.toLowerCase();
+        let categoria = fila.cells[2].textContent.toLowerCase();
+        let cantidad = fila.cells[3].textContent.toLowerCase();
+        let precio = fila.cells[4].textContent.toLowerCase();
+        let descripcion = fila.cells[5].textContent.toLowerCase();
+
+        if (
+            id.includes(filtro) || 
+            nombre.includes(filtro) || 
+            categoria.includes(filtro) || 
+            cantidad.includes(filtro) || 
+            precio.includes(filtro) || 
+            descripcion.includes(filtro)
+        ) {
+            fila.style.display = "";
+        } else {
+            fila.style.display = "none";
+        }
+    });
+});
+</script>
 {% endblock %}

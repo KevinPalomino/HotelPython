@@ -100,13 +100,41 @@ class Habitacion(db.Model):
     fotos = db.relationship('Foto', backref='habitacion', lazy=True)
 
 
+# class Cliente(db.Model):
+#     __tablename__ = 'clientes'
+#     idclientes = db.Column(db.Integer, primary_key=True)
+#     personas_cedula = db.Column(db.BigInteger, db.ForeignKey(
+#         'personas.cedula'), nullable=False)
+#     departamento = db.Column(db.String(50))
+#     ciudad = db.Column(db.String(50))
+#     persona = db.relationship('Persona', backref='cliente', uselist=False)
+
+
 class Cliente(db.Model):
+    """
+    Modelo Cliente
+    Representa a los clientes registrados en el sistema.
+    Cada cliente está asociado a una persona y tiene información
+    básica de ubicación y estado (activo/inactivo).
+    """
     __tablename__ = 'clientes'
+
+    # Identificador único del cliente
     idclientes = db.Column(db.Integer, primary_key=True)
-    personas_cedula = db.Column(db.BigInteger, db.ForeignKey(
-        'personas.cedula'), nullable=False)
+
+    # Relación con la tabla personas (la cédula es la clave primaria en Personas)
+    personas_cedula = db.Column(
+        db.BigInteger,
+        db.ForeignKey('personas.cedula'),
+        nullable=False
+    )
+    # Información de ubicación
     departamento = db.Column(db.String(50))
     ciudad = db.Column(db.String(50))
+    # Estado del cliente:
+    # 1 = Activo (por defecto), 0 = Inactivo
+    estado = db.Column(db.Integer, nullable=False, default=1)
+    # Relación 1:1 con Persona
     persona = db.relationship('Persona', backref='cliente', uselist=False)
 
 
@@ -117,8 +145,13 @@ class Reserva(db.Model):
     checkout = db.Column(db.Date, nullable=False)
     abono = db.Column(db.BigInteger, nullable=False)
     estado = db.Column(db.Integer)  # tinyint(1) mapeado como Integer
-    clientes_idclientes = db.Column(db.Integer, db.ForeignKey(
-        'clientes.idclientes'), nullable=False)
+    fecha = db.Column(db.DateTime, default=datetime.now)  # ⬅️ nueva
+    comentario = db.Column(db.Text, nullable=True)  # ⬅️ nueva
+
+    clientes_idclientes = db.Column(
+        db.Integer, db.ForeignKey('clientes.idclientes'),
+        nullable=False
+    )
     cliente = db.relationship('Cliente', backref='reservas', lazy=True)
     detalle = db.relationship('DetalleReserva', backref='reserva', lazy=True)
 

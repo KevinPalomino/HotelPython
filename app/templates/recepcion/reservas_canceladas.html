@@ -1,0 +1,174 @@
+{% extends "base.html" %}
+
+{% block title %}Reservas Canceladas - Hotel Management{% endblock %}
+
+{% block content %}
+
+<div class="breadcrumb">
+    <a href="{{ url_for('recepcion.panel_recepcionista') }}">
+        <i class="fas fa-concierge-bell"></i> Panel Recepción
+    </a>
+    <span> / </span>
+    <a href="{{ url_for('recepcion.ver_reservas_checkin') }}">
+        Check-in
+    </a>
+    <span> / Reservas Canceladas</span>
+</div>
+
+<h1 class="page-title">
+    <i class="fas fa-times-circle"></i>
+    Reservas Canceladas
+</h1>
+
+<!-- Botón para volver -->
+<div class="mb-4">
+    <a href="{{ url_for('recepcion.ver_reservas_checkin') }}" class="btn btn-primary">
+        <i class="fas fa-arrow-left"></i> Volver a Check-in
+    </a>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <h2 class="card-title">Historial de Reservas Canceladas</h2>
+    </div>
+
+    {% if reservas %}
+    <div class="table-container">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th><i class="fas fa-user"></i> Cliente</th>
+                    <th><i class="fas fa-bed"></i> Habitación</th>
+                    <th><i class="fas fa-home"></i> Tipo</th>
+                    <th><i class="fas fa-calendar-alt"></i> Fecha Ingreso</th>
+                    <th><i class="fas fa-calendar-alt"></i> Fecha Salida</th>
+                    <th><i class="fas fa-info-circle"></i> Estado</th>
+                    <th><i class="fas fa-exclamation-triangle"></i> Tipo</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for r, h, p in reservas %}
+                <tr>
+                    <td>{{ p.nombre }}</td>
+                    <td>Habitación {{ h.idhabitaciones }}</td>
+                    <td>{{ h.tipo }}</td>
+                    <td>{{ r.checkin.strftime('%Y-%m-%d') }}</td>
+                    <td>{{ r.checkout.strftime('%Y-%m-%d') }}</td>
+                    <td>
+                        <span class="status-badge status-cancelled">Cancelada</span>
+                    </td>
+                    <td>
+                        {% if r.checkin.strftime('%Y-%m-%d') < hoy %}
+                            <span class="badge badge-danger">
+                                <i class="fas fa-clock"></i> Vencida
+                            </span>
+                        {% else %}
+                            <span class="badge badge-warning">
+                                <i class="fas fa-user-times"></i> Manual
+                            </span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    
+    <!-- Información adicional -->
+    <div class="card-footer">
+        <div class="row">
+            <div class="col-md-6">
+                <small class="text-muted">
+                    <i class="fas fa-info-circle"></i>
+                    <strong>Total de reservas canceladas:</strong> {{ reservas|length }}
+                </small>
+            </div>
+            <div class="col-md-6 text-right">
+                <small class="text-muted">
+                    <span class="badge badge-danger mr-2">
+                        <i class="fas fa-clock"></i> Vencida
+                    </span>
+                    Cancelada automáticamente por fecha vencida
+                    <br>
+                    <span class="badge badge-warning">
+                        <i class="fas fa-user-times"></i> Manual
+                    </span>
+                    Cancelada manualmente por el recepcionista
+                </small>
+            </div>
+        </div>
+    </div>
+    
+    {% else %}
+    <div class="text-center p-5">
+        <i class="fas fa-smile" style="font-size: 4rem; color: var(--text-light); margin-bottom: 1rem;"></i>
+        <h4 style="color: var(--text-light);">¡Excelente!</h4>
+        <p style="color: var(--text-light); font-size: 1.1rem;">
+            No hay reservas canceladas. Todas las reservas están siendo gestionadas correctamente.
+        </p>
+        <a href="{{ url_for('recepcion.ver_reservas_checkin') }}" class="btn btn-primary mt-3">
+            <i class="fas fa-arrow-left"></i> Volver a Check-in
+        </a>
+    </div>
+    {% endif %}
+</div>
+
+<!-- CSS adicional -->
+<style>
+.status-cancelled {
+    background-color: #dc3545;
+    color: white;
+    padding: 0.25rem 0.75rem;
+    border-radius: 0.25rem;
+    font-size: 0.75rem;
+    font-weight: bold;
+}
+
+.badge {
+    padding: 0.35rem 0.65rem;
+    font-size: 0.75rem;
+}
+
+.badge-danger {
+    background-color: #dc3545;
+    color: white;
+}
+
+.badge-warning {
+    background-color: #ffc107;
+    color: #212529;
+}
+
+.card-footer {
+    background-color: #f8f9fa;
+    border-top: 1px solid #dee2e6;
+    padding: 1rem;
+}
+
+.table tbody tr:hover {
+    background-color: #f8f9fa;
+}
+
+/* Animación sutil para las filas */
+.table tbody tr {
+    transition: background-color 0.2s ease;
+}
+
+/* Estilo para el mensaje cuando no hay reservas */
+.text-center i.fa-smile {
+    color: #28a745 !important;
+}
+
+.text-center h4 {
+    color: #28a745 !important;
+}
+
+.status-badge {
+    padding: 0.25rem 0.75rem;
+    border-radius: 0.25rem;
+    font-size: 0.75rem;
+    font-weight: bold;
+}
+</style>
+
+{% endblock %}

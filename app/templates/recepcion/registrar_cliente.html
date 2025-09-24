@@ -68,14 +68,27 @@
             </div>
 
             <div class="btn-group">
-                <button type="submit" class="btn btn-success">
-                    <i class="fas fa-save"></i>
-                    Registrar Cliente
-                </button>
-                <a href="{{ url_for('recepcion.panel_recepcionista') }}" class="btn btn-secondary">
-                    <i class="fas fa-arrow-left"></i>
-                    Cancelar
-                </a>
+                {% if next_url %}
+                    <!-- Botón especial si venimos de la página de reserva -->
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i>
+                        Registrar y Volver a la Reserva
+                    </button>
+                    <a href="{{ next_url }}" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left"></i>
+                        Cancelar y Volver
+                    </a>
+                {% else %}
+                    <!-- Botones normales -->
+                    <button type="submit" class="btn btn-success">
+                        <i class="fas fa-save"></i>
+                        Registrar Cliente
+                    </button>
+                    <a href="{{ url_for('recepcion.panel_recepcionista') }}" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left"></i>
+                        Cancelar
+                    </a>
+                {% endif %}
             </div>
         </form>
     </div>

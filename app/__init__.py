@@ -49,3 +49,4 @@ def create_app():
 
 # Ejecutar app desde run.py
 app = create_app()
+

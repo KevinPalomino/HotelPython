@@ -1,16 +1,31 @@
-# app/routes/admin_routes.py
 import io
-from app.models.models import TipoHabitacion  # asegúrate de importar
 from flask import Blueprint, render_template, request, redirect, send_file, url_for, flash
 from app import db
-from app.models.models import CategoriaInventario, Habitacion, Categoria, Cama, Inventario, RelacionCama, Foto, TipoHabitacion
+from app.models.models import CategoriaInventario, Habitacion, Categoria, Cama, Inventario, RelacionCama, Foto, TipoHabitacion, Persona, Rol, Reserva, Cliente
 from flask_login import login_required, current_user
 from werkzeug.security import generate_password_hash
-from app.models.models import Persona, Rol
 from collections import Counter
 
-
 admin_bp = Blueprint('admin', __name__)
+
+# CONSTANTES PARA ESTADOS DE HABITACIÓN
+
+
+class EstadosHabitacion:
+    DISPONIBLE = 'disponible'
+    OCUPADA = 'ocupada'
+    MANTENIMIENTO = 'mantenimiento'
+    INACTIVA = 'inactiva'
+
+    @classmethod
+    def todas_activas(cls):
+        """Retorna todos los estados que representan habitaciones activas"""
+        return [cls.DISPONIBLE, cls.OCUPADA, cls.MANTENIMIENTO]
+
+    @classmethod
+    def disponibles_para_admin(cls):
+        """Estados que el admin considera como habitaciones disponibles para gestión"""
+        return [cls.DISPONIBLE, cls.OCUPADA, cls.MANTENIMIENTO]
 
 
 @admin_bp.route('/panel')
@@ -31,7 +46,7 @@ def nueva_habitacion():
 
     categorias = Categoria.query.all()
     camas = Cama.query.all()
-    tipos = TipoHabitacion.query.all()  # ✅ AÑADIDO
+    tipos = TipoHabitacion.query.all()
 
     if request.method == 'POST':
         tipo_id = request.form['tipo_id']
@@ -62,7 +77,7 @@ def nueva_habitacion():
             tipos_idtipo=tipo_id,
             capacidad=capacidad,
             precio=precio,
-            estado=True,
+            estado=EstadosHabitacion.DISPONIBLE,
             categorias_idcategorias=categoria_id,
             ventilador=ventilador,
             aire_acondicionado=aire,
@@ -112,8 +127,10 @@ def listar_habitaciones():
         flash('Acceso restringido', 'danger')
         return redirect(url_for('auth.login'))
 
-    # Muestra unicamente las habitaciones activas.
-    habitaciones = Habitacion.query.filter_by(estado=1).all()
+    habitaciones = Habitacion.query.filter(
+        Habitacion.estado.in_(EstadosHabitacion.disponibles_para_admin())
+    ).all()
+
     return render_template('admin/listar_habitaciones.html', habitaciones=habitaciones)
 
 
@@ -130,12 +147,16 @@ def editar_habitacion(id):
     tipos = TipoHabitacion.query.all()
 
     if request.method == 'POST':
-        # 🔁 Aquí cambiamos el nombre del campo de tipo
-        # <- el select ahora se llama tipo_id
         habitacion.tipos_idtipo = int(request.form['tipo_id'])
         habitacion.capacidad = int(request.form['capacidad'])
         habitacion.precio = int(request.form['precio'])
-        habitacion.estado = 'estado' in request.form
+
+        if 'estado' in request.form:
+            if habitacion.estado == EstadosHabitacion.INACTIVA:
+                habitacion.estado = EstadosHabitacion.DISPONIBLE
+        else:
+            habitacion.estado = EstadosHabitacion.INACTIVA
+
         habitacion.categorias_idcategorias = int(request.form['categoria'])
 
         habitacion.ventilador = 'ventilador' in request.form
@@ -147,10 +168,8 @@ def editar_habitacion(id):
         habitacion.aseo = 'aseo' in request.form
         habitacion.caja_fuerte = 'caja_fuerte' in request.form
 
-        # 🔄 Limpiar relaciones de camas previas
         RelacionCama.query.filter_by(habitaciones_idhabitaciones=id).delete()
 
-        # 🧮 Leer nuevas cantidades de camas desde el formulario
         camas_dict = {}
         for key, value in request.form.items():
             if key.startswith('camas[') and key.endswith(']'):
@@ -177,14 +196,13 @@ def editar_habitacion(id):
         flash('Habitación actualizada correctamente.', 'success')
         return redirect(url_for('admin.listar_habitaciones'))
 
-    # Mostrar cantidades actuales de camas
     camas_relacionadas = Counter([r.camas_idcamas for r in habitacion.camas])
 
     return render_template('admin/editar_habitacion.html',
                            habitacion=habitacion,
                            categorias=categorias,
                            camas=camas,
-                           tipos=tipos,  # ← importante
+                           tipos=tipos,
                            camas_relacionadas=camas_relacionadas)
 
 
@@ -215,7 +233,7 @@ def eliminar_foto_admin(id):
 @login_required
 def eliminar_habitacion(id):
     habitacion = Habitacion.query.get_or_404(id)
-    habitacion.estado = False  # Marcarla como no disponible en lugar de borrarla
+    habitacion.estado = EstadosHabitacion.INACTIVA
     db.session.commit()
     flash('Habitación marcada como inactiva.', 'info')
     return redirect(url_for('admin.listar_habitaciones'))
@@ -228,7 +246,8 @@ def habitaciones_inactivas():
         flash('Acceso no autorizado', 'danger')
         return redirect(url_for('auth.login'))
 
-    habitaciones = Habitacion.query.filter_by(estado=False).all()
+    habitaciones = Habitacion.query.filter_by(
+        estado=EstadosHabitacion.INACTIVA).all()
     return render_template('admin/habitaciones_inactivas.html', habitaciones=habitaciones)
 
 
@@ -236,7 +255,7 @@ def habitaciones_inactivas():
 @login_required
 def activar_habitacion(id):
     habitacion = Habitacion.query.get_or_404(id)
-    habitacion.estado = True
+    habitacion.estado = EstadosHabitacion.DISPONIBLE
     db.session.commit()
     flash('Habitación habilitada nuevamente.', 'success')
     return redirect(url_for('admin.habitaciones_inactivas'))
@@ -248,8 +267,6 @@ def ver_reservas():
     if current_user.rol.nombre != 'Administrador':
         flash('Acceso no autorizado', 'danger')
         return redirect(url_for('auth.login'))
-
-    from app.models.models import Reserva, Cliente, Persona, Habitacion
 
     reservas = Reserva.query.all()
     return render_template('admin/reservas.html', reservas=reservas)
@@ -288,7 +305,7 @@ def nuevo_producto():
                 categoria_id = nueva_categoria.id
             else:
                 flash("Debes ingresar el nombre de la nueva categoría", "danger")
-                return redirect(url_for('admin.inventario_nuevo'))
+                return redirect(url_for('admin.nuevo_producto'))
 
         nuevo = Inventario(
             nombre=nombre,
@@ -316,7 +333,7 @@ def editar_producto(id):
 
     if request.method == 'POST':
         producto.nombre = request.form['nombre']
-        producto.categoria = bool(int(request.form['categoria']))
+        producto.categoria = int(request.form['categoria'])
         producto.cantidad = int(request.form['cantidad'])
         producto.descripcion = request.form['descripcion']
         producto.precio = int(request.form['precio'])
@@ -342,7 +359,6 @@ def eliminar_producto(id):
     return redirect(url_for('admin.ver_inventario'))
 
 
-# RUTA PARA EL APARTADO DEL PERSONAL:
 @admin_bp.route('/admin/personal')
 @login_required
 def ver_personal():
@@ -350,12 +366,10 @@ def ver_personal():
         flash('Acceso no autorizado', 'danger')
         return redirect(url_for('auth.login'))
 
-    from app.models.models import Persona
     empleados = Persona.query.all()
     return render_template('admin/personal_listar.html', empleados=empleados)
 
 
-# RUTA PARA AGREGAR NUEVOS EMPLEADOS:
 @admin_bp.route('/admin/personal/nuevo', methods=['GET', 'POST'])
 @login_required
 def nuevo_empleado():
@@ -415,34 +429,6 @@ def editar_empleado(cedula):
     return render_template('admin/personal_editar.html', persona=persona, roles=roles)
 
 
-'''
-#CAMBIAR CONTRASEÑA DE LOS EMPLEADOS
-@admin_bp.route('/admin/personal/cambiar_clave/<int:cedula>', methods=['GET', 'POST'])
-@login_required
-def cambiar_contrasena_empleado(cedula):
-    if current_user.rol.nombre != 'Administrador':
-        flash('Acceso no autorizado', 'danger')
-        return redirect(url_for('auth.login'))
-
-    persona = Persona.query.get_or_404(cedula)
-
-    if request.method == 'POST':
-        nueva_clave = request.form['nueva_contrasena']
-        confirmar = request.form['confirmar_contrasena']
-
-        if nueva_clave != confirmar:
-            flash('Las contraseñas no coinciden', 'danger')
-            return redirect(request.url)
-
-        persona.contrasena = generate_password_hash(nueva_clave)
-        db.session.commit()
-        flash('Contraseña actualizada exitosamente.', 'success')
-        return redirect(url_for('admin.ver_personal'))
-
-    return render_template('admin/cambiar_contrasena.html', persona=persona)
-'''
-
-
 @admin_bp.route('/admin/personal/eliminar/<int:cedula>')
 @login_required
 def eliminar_empleado(cedula):
@@ -450,13 +436,28 @@ def eliminar_empleado(cedula):
         flash('Acceso denegado', 'danger')
         return redirect(url_for('auth.login'))
 
-    persona = Persona.query.get_or_404(cedula)
+    cliente = Cliente.query.filter_by(personas_cedula=cedula).first_or_404()
 
-    if persona.cedula == current_user.cedula:
-        flash('No puedes eliminar tu propio usuario', 'warning')
+    if cliente.personas_cedula == current_user.cedula:
+        flash('No puedes inhabilitar tu propio usuario', 'warning')
         return redirect(url_for('admin.ver_personal'))
 
-    db.session.delete(persona)
+    cliente.estado = 0   # 👈 marcar como inactivo
     db.session.commit()
-    flash('Empleado eliminado correctamente.', 'info')
+
+    flash('Empleado inhabilitado correctamente.', 'info')
     return redirect(url_for('admin.ver_personal'))
+
+
+@admin_bp.app_template_filter('estado_habitacion_admin')
+def estado_habitacion_admin_filter(estado):
+    """
+    Filtro para templates de admin que convierte estados a texto legible
+    """
+    estado_map = {
+        EstadosHabitacion.DISPONIBLE: 'Disponible',
+        EstadosHabitacion.OCUPADA: 'Ocupada',
+        EstadosHabitacion.MANTENIMIENTO: 'En Mantenimiento',
+        EstadosHabitacion.INACTIVA: 'Inactiva'
+    }
+    return estado_map.get(estado, f'Estado: {estado}')

@@ -1,17 +1,21 @@
-{% extends "base.html" %} {% block title %}Panel de Recepción - Hotel
-Management{% endblock %} {% block content %}
+{% extends "base.html" %}
+
+{% block title %}Panel de Recepción - Hotel Management{% endblock %}
+
+{% block content %}
 <h1 class="page-title">
   <i class="fas fa-concierge-bell"></i>
   Panel de Recepción
 </h1>
 
 <div class="nav-grid">
-  <a href="{{ url_for('recepcion.registrar_cliente') }}" class="nav-item">
+  <!-- MODIFICADO: Enlace a Clientes Alojados -->
+  <a href="{{ url_for('recepcion.clientes_alojados') }}" class="nav-item">
     <div class="nav-icon">
-      <i class="fas fa-user-plus"></i>
+      <i class="fas fa-bed"></i>
     </div>
-    <div class="nav-title">Registrar Cliente</div>
-    <div class="nav-description">Registrar nuevos clientes en el sistema</div>
+    <div class="nav-title">Clientes Alojados</div>
+    <div class="nav-description">Ver los clientes actualmente en el hotel</div>
   </a>
 
   <a href="{{ url_for('recepcion.nueva_reserva') }}" class="nav-item">
@@ -38,7 +42,6 @@ Management{% endblock %} {% block content %}
     <div class="nav-description">Procesar salidas de huéspedes</div>
   </a>
 
-  <!-- ✅ Nuevo módulo -->
   <a href="{{ url_for('recepcion.clientes_personal') }}" class="nav-item">
     <div class="nav-icon">
       <i class="fas fa-users"></i>
@@ -48,5 +51,14 @@ Management{% endblock %} {% block content %}
       Consultar información de clientes y recepcionistas
     </div>
   </a>
+  
+  <!-- <a href="{{ url_for('recepcion.registrar_cliente') }}" class="nav-item">
+    <div class="nav-icon">
+      <i class="fas fa-user-plus"></i>
+    </div>
+    <div class="nav-title">Registrar Cliente</div>
+    <div class="nav-description">Añadir un nuevo cliente al sistema</div>
+  </a> -->
 </div>
 {% endblock %}
+
