@@ -50,8 +50,9 @@
                     <th><i class="fas fa-id-card"></i> Cédula</th>
                     <th><i class="fas fa-user"></i> Nombre Completo</th>
                     <th><i class="fas fa-bed"></i> Habitación</th>
-                    <th><i class="fas fa-sign-in-alt"></i> Fecha de Check-in</th>
-                    <th><i class="fas fa-sign-out-alt"></i> Fecha de Check-out</th>
+                    <th><i class="fas fa-sign-in-alt"></i> Check-in</th>
+                    <th><i class="fas fa-sign-out-alt"></i> Check-out</th>
+                    <th><i class="fas fa-utensils"></i> Acciones</th>
                 </tr>
             </thead>
             <tbody>
@@ -64,6 +65,14 @@
                     </td>
                     <td>{{ cliente.checkin.strftime('%d/%m/%Y') }}</td>
                     <td>{{ cliente.checkout.strftime('%d/%m/%Y') }}</td>
+                    <td>
+                        <a href="{{ url_for('recepcion.nuevo_consumo',
+                    cliente_cedula=cliente.cedula,
+                    habitacion_id=cliente.idhabitaciones,
+                    detalle_id=cliente.detalle_id) }}"
+   class="btn btn-sm btn-primary">
+   <i class="fas fa-plus"></i> Consumos</a>
+                    </td>
                 </tr>
                 {% endfor %}
             </tbody>

@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+
+{% block title %}Registrar Consumos{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h2><i class="fas fa-receipt"></i> Registrar Consumos</h2>
+
+    <form method="POST" action="{{ url_for('recepcion.nuevo_consumo') }}">
+        <!-- Mostrar la habitación (no editable) y enviar el id en hidden -->
+        <div class="form-group">
+            <label>Habitación</label>
+            <div>
+                <span class="badge badge-primary">Habitación {{ habitacion_id_preseleccionada }}</span>
+            </div>
+            <input type="hidden" name="habitacion_id" value="{{ habitacion_id }}">
+            {% if detalle_id %}
+            <input type="hidden" name="detalle_id" value="{{ detalle_id }}">
+            {% endif %}
+            {% if cliente_cedula %}
+            <input type="hidden" name="cliente_cedula" value="{{ cliente_cedula }}">
+            {% endif %}
+        </div>
+
+        <!-- Tabla de productos -->
+        <table class="table" id="tabla-productos">
+            <thead>
+                <tr>
+                    <th>Producto</th>
+                    <th>Cantidad</th>
+                    <th>Precio (COP)</th>
+                    <th>Total</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>
+                        <select name="producto_id[]" class="form-control producto-select" required>
+                            <option value="">-- Seleccione --</option>
+                            {% for item in productos %}
+                            <option value="{{ item.idinventario }}" data-precio="{{ item.precio }}">
+                                {{ item.nombre }} ({{ item.cantidad }} disp.)
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </td>
+                    <td>
+                        <input type="number" name="cantidad[]" class="form-control qty" min="1" value="1" required>
+                    </td>
+                    <td>
+                        <input type="text" name="precio[]" class="form-control price" readonly>
+                    </td>
+                    <td class="line-total">0</td>
+                    <td>
+                        <button type="button" class="btn btn-danger btn-sm" onclick="removeRow(this)">X</button>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+
+        <button type="button" class="btn btn-secondary" onclick="addRow()">+ Agregar Producto</button>
+        <button type="submit" class="btn btn-success">Registrar Consumos</button>
+    </form>
+</div>
+
+<script>
+function updateRow(row){
+    let select = row.querySelector(".producto-select");
+    let qty = row.querySelector(".qty");
+    let price = row.querySelector(".price");
+    let totalCell = row.querySelector(".line-total");
+
+    let precio = parseFloat(select.options[select.selectedIndex]?.getAttribute("data-precio") || 0) || 0;
+    let cantidad = parseInt(qty.value || 0);
+    price.value = precio.toFixed(2);
+    totalCell.textContent = (precio * cantidad).toFixed(2);
+}
+
+function addRow() {
+    let row = document.querySelector("#tabla-productos tbody tr").cloneNode(true);
+    row.querySelectorAll("input").forEach(i => i.value = "");
+    row.querySelector(".line-total").textContent = "0";
+    row.querySelector("select").selectedIndex = 0;
+
+    row.querySelector(".producto-select").addEventListener("change", () => updateRow(row));
+    row.querySelector(".qty").addEventListener("input", () => updateRow(row));
+
+    document.querySelector("#tabla-productos tbody").appendChild(row);
+}
+
+function removeRow(btn) {
+    let rows = document.querySelectorAll("#tabla-productos tbody tr");
+    if (rows.length > 1) btn.closest("tr").remove();
+}
+
+// Activar eventos en la fila inicial
+document.querySelectorAll("#tabla-productos tbody tr").forEach(row => {
+    row.querySelector(".producto-select").addEventListener("change", () => updateRow(row));
+    row.querySelector(".qty").addEventListener("input", () => updateRow(row));
+});
+</script>
+{% endblock %}

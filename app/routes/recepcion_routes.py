@@ -3,7 +3,9 @@ from flask_login import login_required, current_user
 from datetime import date, datetime, timedelta
 from app import db
 from sqlalchemy import or_
-from app.models.models import Habitacion, Persona, Reserva, Rol, DetalleReserva, Cliente
+from app.models.models import Habitacion, Persona, Reserva, Rol, DetalleReserva, Cliente, Consumo, Inventario, Ventas
+from sqlalchemy import text
+
 
 recepcion_bp = Blueprint('recepcion', __name__)
 
@@ -652,7 +654,8 @@ def clientes_alojados():
         Persona.nombre,
         Habitacion.idhabitaciones,
         Reserva.checkin,
-        Reserva.checkout
+        Reserva.checkout,
+        DetalleReserva.iddetalle_reserva.label("detalle_id") 
     ).join(
         Cliente, Persona.cedula == Cliente.personas_cedula
     ).join(
@@ -674,7 +677,7 @@ def clientes_alojados():
         )
 
     clientes_info = query.all()
-
+    
     return render_template('recepcion/clientes_alojados.html',
                            clientes=clientes_info,
                            filtro=filtro)
@@ -702,10 +705,140 @@ def clientes_personal():
 
     return render_template('recepcion/clientes_personal.html', personas=personas, filtro=filtro)
 
+# -----------------------------
+# CONSUMOS DE CLIENTES ALOJADOS
+# -----------------------------
+@recepcion_bp.route('/recepcion/consumo/nuevo', methods=['GET', 'POST'])
+@login_required
+def nuevo_consumo():
+    # import local (ya tienes models arriba, pero lo ponemos por claridad)
+    from app.models.models import Consumo, Inventario, Ventas, DetalleReserva, Reserva, Habitacion
 
-@recepcion_bp.app_template_filter('estado_habitacion')
-def estado_habitacion_filter(estado):
-    """
-    Filtro de template para convertir estados de habitación a texto
-    """
-    return get_estado_habitacion_texto(estado)
+    if current_user.rol.nombre != 'Recepcionista':
+        flash('Acceso no autorizado', 'danger')
+        return redirect(url_for('auth.login'))
+
+    # recibir parámetros GET (vienen del enlace en clientes_alojados)
+    habitacion_id = request.args.get("habitacion_id", type=int)
+    detalle_id = request.args.get("detalle_id", type=int)
+    cliente_cedula = request.args.get("cliente_cedula")
+
+    # datos para el formulario GET
+    habitaciones = db.session.query(Habitacion).filter(Habitacion.estado == 'ocupada').all()
+    productos = db.session.query(Inventario).filter(Inventario.cantidad > 0).all()
+
+    if request.method == 'POST':
+        try:
+            # leer hidden fields del form
+            habitacion_id_form = request.form.get('habitacion_id')
+            detalle_id_form = request.form.get('detalle_id')
+
+            if not habitacion_id_form:
+                flash("No se recibió el ID de la habitación.", "danger")
+                return redirect(request.url)
+
+            habitacion_id_form = int(habitacion_id_form)
+
+            # 1) intentar usar detalle_id enviado (prioridad)
+            detalle_obj = None
+            if detalle_id_form:
+                try:
+                    detalle_obj = DetalleReserva.query.get(int(detalle_id_form))
+                except Exception:
+                    detalle_obj = None
+
+            # 2) si no viene o no existe, buscar detalle activo (reserva en curso)
+            if not detalle_obj:
+                detalle_obj = db.session.query(DetalleReserva).join(Reserva).filter(
+                    DetalleReserva.habitaciones_idhabitaciones == habitacion_id_form,
+                    Reserva.estado == 1  # en curso
+                ).order_by(Reserva.checkin.desc()).first()
+
+            # 3) fallback: buscar cualquier detalle relacionado (estado 0 o 1)
+            if not detalle_obj:
+                detalle_obj = db.session.query(DetalleReserva).join(Reserva).filter(
+                    DetalleReserva.habitaciones_idhabitaciones == habitacion_id_form,
+                    Reserva.estado.in_([0, 1])
+                ).order_by(Reserva.checkin.desc()).first()
+
+            # Si aún no hay detalle, NO insertar (evita IntegrityError). Avisar al usuario.
+            if not detalle_obj:
+                flash("No se encontró una reserva/detalle asociado a esa habitación. No se puede registrar consumo (fk faltante).", "danger")
+                return redirect(url_for('recepcion.clientes_alojados'))
+
+            # leer items del form (array)
+            productos_ids = request.form.getlist('producto_id[]')
+            cantidades = request.form.getlist('cantidad[]')
+
+            if not productos_ids:
+                flash("Debe seleccionar al menos un producto.", "warning")
+                return redirect(request.url)
+
+            # procesar cada línea
+            for pid, qty in zip(productos_ids, cantidades):
+                if not pid or not qty:
+                    continue
+                producto = Inventario.query.get(int(pid))
+                cantidad = int(qty)
+
+                if not producto:
+                    flash(f"Producto id {pid} no encontrado.", "danger")
+                    return redirect(request.url)
+
+                if cantidad <= 0:
+                    continue
+
+                if producto.cantidad < cantidad:
+                    flash(f"No hay suficiente stock de {producto.nombre}. Stock actual: {producto.cantidad}", "danger")
+                    return redirect(request.url)
+
+                # descontar stock
+                producto.cantidad -= cantidad
+
+                precio_unitario = float(producto.precio)
+                total = precio_unitario * cantidad
+
+                # crear consumo (usa el iddetalle_reserva correcto)
+                consumo = Consumo(
+                    fecha=datetime.now(),
+                    cantidad=cantidad,
+                    total=int(round(total)),  # tu modelo total es Integer
+                    inventario_idinventario=producto.idinventario,
+                    detalle_reserva_iddetalle_reserva=detalle_obj.iddetalle_reserva,
+                    estado=True
+                )
+                db.session.add(consumo)
+                db.session.flush()  # para obtener consumo.idconsumos
+
+                # crear venta ligada al consumo
+                venta = Ventas(
+                    fecha=consumo.fecha,
+                    cantidad=cantidad,
+                    precio=precio_unitario,
+                    id_inventario=producto.idinventario,
+                    id_consumo=consumo.idconsumos
+                )
+                db.session.add(venta)
+
+            db.session.commit()
+            flash("Consumos y Ventas registrados correctamente ✅", "success")
+            return redirect(url_for('recepcion.clientes_alojados'))
+
+        except Exception as e:
+            db.session.rollback()
+            # loguear para debug (si usas app.logger)
+            try:
+                from flask import current_app
+                current_app.logger.exception("Error al registrar consumo")
+            except Exception:
+                pass
+            flash(f"Error al registrar el consumo: {str(e)}", "danger")
+            return redirect(request.url)
+
+    # GET: renderizar el formulario con los valores pasados (habitacion_id y detalle_id si existen)
+    return render_template("recepcion/nuevo_consumo.html",
+                           habitaciones=habitaciones,
+                           productos=productos,
+                           habitacion_id=habitacion_id,
+                           detalle_id=detalle_id,
+                           cliente_cedula=cliente_cedula)

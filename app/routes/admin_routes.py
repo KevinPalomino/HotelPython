@@ -5,6 +5,9 @@ from app.models.models import CategoriaInventario, Habitacion, Categoria, Cama, 
 from flask_login import login_required, current_user
 from werkzeug.security import generate_password_hash
 from collections import Counter
+from sqlalchemy import text
+from datetime import datetime
+from app.models.models import Consumo, Inventario, DetalleReserva
 
 admin_bp = Blueprint('admin', __name__)
 
@@ -461,3 +464,69 @@ def estado_habitacion_admin_filter(estado):
         EstadosHabitacion.INACTIVA: 'Inactiva'
     }
     return estado_map.get(estado, f'Estado: {estado}')
+
+# -------------------
+# HISTORIAL DE VENTAS
+# -------------------
+@admin_bp.route('/admin/ventas', methods=['GET'])
+@login_required
+def admin_ventas():
+    if current_user.rol.nombre != 'Administrador':
+        flash('Acceso no autorizado', 'danger')
+        return redirect(url_for('auth.login'))
+
+    habitacion_filtro = request.args.get('habitacion')
+    fecha_inicio = request.args.get('fecha_inicio')
+    fecha_fin = request.args.get('fecha_fin')
+
+    params = {}
+    where = "WHERE 1=1"
+
+    if habitacion_filtro:
+        where += " AND h.idhabitaciones = :hab"
+        params['hab'] = habitacion_filtro
+
+    if fecha_inicio:
+        where += " AND DATE(v.fecha) >= :inicio"
+        params['inicio'] = fecha_inicio
+
+    if fecha_fin:
+        where += " AND DATE(v.fecha) <= :fin"
+        params['fin'] = fecha_fin
+
+    query_ventas = f"""
+    SELECT 
+        v.id_ventas,
+        v.fecha,
+        v.cantidad,
+        v.precio AS precio_unitario,
+        (v.cantidad * v.precio) AS total,
+        i.nombre AS producto,
+        h.idhabitaciones AS habitacion
+    FROM ventas v
+    JOIN inventario i ON v.id_inventario = i.idinventario
+    JOIN consumos c ON v.id_consumo = c.idconsumos
+    LEFT JOIN detalle_reserva dr ON c.detalle_reserva_iddetalle_reserva = dr.iddetalle_reserva
+    LEFT JOIN habitaciones h ON dr.habitaciones_idhabitaciones = h.idhabitaciones
+    {where}
+    ORDER BY v.fecha DESC
+    """
+
+    ventas = db.session.execute(text(query_ventas), params).fetchall()
+
+    query_total = f"SELECT SUM(v.cantidad * v.precio) AS total_general FROM ventas v JOIN consumos c ON v.id_consumo = c.idconsumos LEFT JOIN detalle_reserva dr ON c.detalle_reserva_iddetalle_reserva = dr.iddetalle_reserva LEFT JOIN habitaciones h ON dr.habitaciones_idhabitaciones = h.idhabitaciones {where}"
+    total_general = db.session.execute(text(query_total), params).scalar() or 0.0
+    total_general = float(total_general)
+
+    # para el formulario: todas las habitaciones activas y productos
+    habitaciones = Habitacion.query.filter(Habitacion.estado != 'inactiva').all()
+    productos = Inventario.query.all()
+
+    return render_template('admin/ventas.html',
+                           ventas=ventas,
+                           habitacion_filtro=habitacion_filtro,
+                           fecha_inicio=fecha_inicio,
+                           fecha_fin=fecha_fin,
+                           total_general=total_general,
+                           habitaciones=habitaciones,
+                           productos=productos)
